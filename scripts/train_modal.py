@@ -51,6 +51,7 @@ app = modal.App("math-tutor-lora-training")
 image = (
     modal.Image.debian_slim(python_version="3.10")
     .pip_install(
+        "numpy<2",          # torch 2.1 compiled against NumPy 1.x
         "torch==2.1.0",
         "transformers==4.40.0",
         "peft==0.10.0",
@@ -58,6 +59,7 @@ image = (
         "accelerate==0.29.0",
         "datasets==2.19.0",
         "trl==0.8.6",
+        "rich",             # trl dependency not auto-installed
         "scipy",
         "huggingface_hub",
     )

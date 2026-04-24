@@ -3,8 +3,15 @@
 > S2.T3.1 · AIMS KTT Hackathon · Tier 3
 
 An offline, adaptive, multilingual math tutor for children aged 5–9 (P1–P3
-numeracy). Runs on a cheap Android tablet. Handles **Kinyarwanda, French,
-English, and code-switched** speech. Never calls the internet at inference.
+numeracy). Runs on a cheap Android tablet. Handles **Kinyarwanda, Kiswahili,
+French, English, and code-switched** speech. Never calls the internet at
+inference.
+
+## Live Demo
+
+> **Try it now →** [nyingi101-math-tutor.hf.space](https://nyingi101-math-tutor.hf.space)
+>
+> Select your child's age (5–9), language, and tap **START**. No sign-in needed.
 
 ## Contents
 
@@ -54,6 +61,7 @@ Four design decisions anchor the system:
 | **Bayesian Knowledge Tracing (BKT) over deep RL** | BKT is a 4-parameter model per skill. Interpretable by teachers, robust on small response counts, trivial to serialise, and beats an Elo baseline (see Results). |
 | **Template-first feedback with an optional LoRA upgrade path** | Templates give deterministic < 50 ms responses on any hardware. The LoRA adapter (TinyLlama-1.1B, 8.6 MB) upgrades quality on devices that can load it, without breaking the offline guarantee. |
 | **Tap + voice dual input, with pitch normalisation** | A 6-year-old whose voice Whisper mishears can still tap a number. Voice recognition is augmented — not required. |
+| **Age-group curriculum bands** | Each child's age (5–9) gates a difficulty range and a tuned BKT prior so a 5-year-old only sees the easiest items and a 9-year-old is challenged at the top of the curriculum. |
 
 The whole `tutor/` package weighs in under 2 MB of Python source. Deployed
 with Whisper-tiny's weights cached on the device, the footprint stays well
@@ -63,7 +71,7 @@ under the 75 MB target set by the challenge.
 
 ## Quickstart
 
-**Run the demo (browser UI, Kinyarwanda / French / English):**
+**Run the demo (browser UI, Kinyarwanda / Kiswahili / French / English):**
 
 ```bash
 pip install -r requirements.txt
@@ -344,15 +352,56 @@ LoRA config: rank = 8, α = 16, dropout = 0.05; target modules
 
 ### 4 · Multilingual + code-switch detection
 
+Four languages are supported end-to-end: **English, French, Kinyarwanda, and
+Kiswahili**. Swahili is a natural addition given its 200M+ speakers across
+East and Central Africa — the same communities this tutor targets.
+
 `lang_detect.detect()` combines two signals:
 
-1. Word-level lookup against hand-curated EN / FR / KIN lexicons
+1. Word-level lookup against hand-curated EN / FR / KIN / SW lexicons
    (≈ 30 numerals + common math-context words per language)
 2. Character trigram matching as a tie-breaker
 
 When two languages both contribute ≥ 15 % of tokens the result is `mix`,
 and `reply_lang()` resolves to the higher-scoring single language so the
 system never replies in gibberish.
+
+Swahili is fully wired through every layer:
+
+| Layer | SW support |
+|---|---|
+| `lang_detect.py` | SW lexicon (namba, moja–kumi, …) + trigram profile |
+| `asr_adapt.py` | Whisper `language="sw"` + SW number-word → integer map |
+| `model_loader.py` | Dedicated SW system prompt + 3 correct / 3 wrong feedback templates |
+| `demo.py` | "Kiswahili" option in language selector |
+
+### 5 · Age-group curriculum bands
+
+Children aged 5–9 have very different numeracy baselines. Giving a 5-year-old
+a difficulty-8 subtraction item or a 9-year-old a difficulty-1 counting item
+both hurt learning. The engine enforces age-appropriate difficulty at every
+step:
+
+| Age | Difficulty band | BKT p_known prior | What they see |
+| --- | --- | --- | --- |
+| 5 | 1 – 2 | 0.05 | Counting 1–5 with visual dots |
+| 6 | 1 – 3 | 0.10 | Counting 1–10, simple number sense |
+| 7 | 2 – 5 | 0.15 | Addition / subtraction within 10 |
+| 8 | 3 – 7 | 0.20 | Two-digit addition, simple word problems |
+| 9 | 4 – 10 | 0.25 | Full curriculum including harder word problems |
+
+Three places enforce the band:
+
+1. **Diagnostic probes** — `curriculum_loader.sample_diagnostic_probes()` now
+   accepts `diff_min/diff_max` so opening questions are always age-appropriate.
+2. **Item selection** — `LearnerState.select_next_item()` filters to the age
+   band first, then applies the ZPD sweet-spot heuristic within that range.
+3. **BKT prior** — `p_known` is initialised higher for older children who have
+   had more prior exposure (`p_known_prior` from `AGE_BANDS`).
+
+The age selector (5 / 6 / 7 / 8 / 9) is visible in the UI alongside the
+language selector. Age is persisted to the progress database so a returning
+child doesn't need to re-enter it.
 
 ### 5 · Visual grounding (counting)
 

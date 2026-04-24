@@ -300,14 +300,14 @@ python3 parent_report.py amani --format text
 | Artefact | Location |
 | -------- | -------- |
 | Code | [github.com/Josephnyingi/ai-math-tutor](https://github.com/Josephnyingi/ai-math-tutor) |
-| TinyLlama LoRA adapter (production) | [huggingface.co/Josephnyingi/math-tutor-tinyllama-lora](https://huggingface.co/Josephnyingi/math-tutor-tinyllama-lora) |
+| TinyLlama LoRA adapter (production) | [huggingface.co/Nyingi101/math-tutor-tinyllama-lora](https://huggingface.co/Nyingi101/math-tutor-tinyllama-lora) |
 | distilgpt2 LoRA adapter (CPU demo) | `tutor/adapters/distilgpt2-numeracy-lora/` (in repo) |
 | Curriculum generator | `scripts/generate_curriculum.py` (in repo) |
 | Modal GPU training script | `scripts/train_modal.py` — `modal run scripts/train_modal.py` |
 | process_log.md | repo root |
 | SIGNED.md | repo root |
 
-**Submission model link**: [huggingface.co/Josephnyingi/math-tutor-tinyllama-lora](https://huggingface.co/Josephnyingi/math-tutor-tinyllama-lora)
+**Submission model link**: [huggingface.co/Nyingi101/math-tutor-tinyllama-lora](https://huggingface.co/Nyingi101/math-tutor-tinyllama-lora)
 
 ---
 

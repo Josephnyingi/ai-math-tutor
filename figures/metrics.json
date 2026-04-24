@@ -1,0 +1,736 @@
+{
+  "environment": {
+    "python": "3.10.12",
+    "platform": "Linux-6.8.0-106-generic-aarch64-with-glibc2.35",
+    "processor": "aarch64",
+    "timestamp": "2026-04-24T12:06:27+00:00"
+  },
+  "sub_eval_runs": [
+    {
+      "script": "eval_bkt.py",
+      "returncode": 0,
+      "elapsed_s": 39.69
+    },
+    {
+      "script": "eval_asr.py",
+      "returncode": 0,
+      "elapsed_s": 0.62
+    },
+    {
+      "script": "eval_feedback.py",
+      "returncode": 0,
+      "elapsed_s": 0.61
+    }
+  ],
+  "latency_ms": {
+    "lang_detect": {
+      "n": 2000,
+      "mean_ms": 0.0029,
+      "p50_ms": 0.0028,
+      "p95_ms": 0.0037,
+      "p99_ms": 0.0045,
+      "max_ms": 0.1717
+    },
+    "bkt_update": {
+      "n": 2000,
+      "mean_ms": 0.0003,
+      "p50_ms": 0.0003,
+      "p95_ms": 0.0004,
+      "p99_ms": 0.0004,
+      "max_ms": 0.004
+    },
+    "adaptive_select": {
+      "n": 200,
+      "mean_ms": 0.0045,
+      "p50_ms": 0.0043,
+      "p95_ms": 0.0048,
+      "p99_ms": 0.0062,
+      "max_ms": 0.015
+    },
+    "visual_grounding": {
+      "render": {
+        "n": 50,
+        "mean_ms": 0.6468,
+        "p50_ms": 0.0278,
+        "p95_ms": 0.0519,
+        "p99_ms": 15.7691,
+        "max_ms": 30.8608
+      },
+      "blob_count": {
+        "n": 50,
+        "mean_ms": 2.6253,
+        "p50_ms": 2.45,
+        "p95_ms": 4.0799,
+        "p99_ms": 4.4522,
+        "max_ms": 4.8076
+      }
+    },
+    "template_feedback": {
+      "n": 200,
+      "mean_ms": 0.0006,
+      "p50_ms": 0.0006,
+      "p95_ms": 0.0008,
+      "p99_ms": 0.0011,
+      "max_ms": 0.0087
+    },
+    "end_to_end_scoring": {
+      "n": 200,
+      "mean_ms": 0.0056,
+      "p50_ms": 0.0049,
+      "p95_ms": 0.0058,
+      "p99_ms": 0.0119,
+      "max_ms": 0.1238
+    }
+  },
+  "bkt": {
+    "meta": {
+      "n_learners": 300,
+      "n_responses": 40,
+      "train_frac": 0.7,
+      "n_bootstrap": 1000,
+      "seed": 42,
+      "n_predictions": 3600,
+      "curriculum_path": "data/T3.1_Math_Tutor/curriculum_full.json",
+      "n_items": 87
+    },
+    "models": {
+      "BKT": {
+        "model": "BKT",
+        "n_predictions": 3600,
+        "auc": 0.5662,
+        "auc_ci95": [
+          0.5473,
+          0.5847
+        ],
+        "auc_bootstrap_mean": 0.5666,
+        "auc_bootstrap_std": 0.0096,
+        "brier": 0.2852,
+        "log_loss": 0.7904,
+        "accuracy": 0.5347,
+        "precision": 0.4942,
+        "recall": 0.6184,
+        "f1": 0.5494,
+        "tp": 1021,
+        "tn": 904,
+        "fp": 1045,
+        "fn": 630,
+        "mean_pred_prob": 0.6073,
+        "positive_rate": 0.4586,
+        "per_skill": {
+          "counting": {
+            "n": 738,
+            "auc": 0.57,
+            "accuracy": 0.5285,
+            "precision": 0.5023,
+            "recall": 0.6314,
+            "f1": 0.5595,
+            "positive_rate": 0.4743
+          },
+          "number_sense": {
+            "n": 570,
+            "auc": 0.53,
+            "accuracy": 0.5088,
+            "precision": 0.4129,
+            "recall": 0.5664,
+            "f1": 0.4776,
+            "positive_rate": 0.3965
+          },
+          "addition": {
+            "n": 901,
+            "auc": 0.5771,
+            "accuracy": 0.5272,
+            "precision": 0.4973,
+            "recall": 0.6596,
+            "f1": 0.5671,
+            "positive_rate": 0.4695
+          },
+          "subtraction": {
+            "n": 999,
+            "auc": 0.5611,
+            "accuracy": 0.5465,
+            "precision": 0.5214,
+            "recall": 0.6381,
+            "f1": 0.5738,
+            "positive_rate": 0.4785
+          },
+          "word_problem": {
+            "n": 392,
+            "auc": 0.5758,
+            "accuracy": 0.5714,
+            "precision": 0.5176,
+            "recall": 0.5057,
+            "f1": 0.5116,
+            "positive_rate": 0.4439
+          }
+        }
+      },
+      "Elo": {
+        "model": "Elo",
+        "n_predictions": 3600,
+        "auc": 0.517,
+        "auc_ci95": [
+          0.4973,
+          0.5353
+        ],
+        "auc_bootstrap_mean": 0.5168,
+        "auc_bootstrap_std": 0.0098,
+        "brier": 0.27,
+        "log_loss": 0.7378,
+        "accuracy": 0.5014,
+        "precision": 0.4661,
+        "recall": 0.6002,
+        "f1": 0.5248,
+        "tp": 991,
+        "tn": 814,
+        "fp": 1135,
+        "fn": 660,
+        "mean_pred_prob": 0.5089,
+        "positive_rate": 0.4586,
+        "per_skill": {
+          "counting": {
+            "n": 738,
+            "auc": 0.5634,
+            "accuracy": 0.4824,
+            "precision": 0.4773,
+            "recall": 0.9629,
+            "f1": 0.6383,
+            "positive_rate": 0.4743
+          },
+          "number_sense": {
+            "n": 570,
+            "auc": 0.5452,
+            "accuracy": 0.4263,
+            "precision": 0.4031,
+            "recall": 0.9292,
+            "f1": 0.5622,
+            "positive_rate": 0.3965
+          },
+          "addition": {
+            "n": 901,
+            "auc": 0.5486,
+            "accuracy": 0.5361,
+            "precision": 0.5051,
+            "recall": 0.5863,
+            "f1": 0.5427,
+            "positive_rate": 0.4695
+          },
+          "subtraction": {
+            "n": 999,
+            "auc": 0.5025,
+            "accuracy": 0.5035,
+            "precision": 0.4776,
+            "recall": 0.4017,
+            "f1": 0.4364,
+            "positive_rate": 0.4785
+          },
+          "word_problem": {
+            "n": 392,
+            "auc": 0.5342,
+            "accuracy": 0.5612,
+            "precision": 0.6667,
+            "recall": 0.023,
+            "f1": 0.0444,
+            "positive_rate": 0.4439
+          }
+        }
+      },
+      "Majority": {
+        "model": "Majority",
+        "n_predictions": 3600,
+        "auc": 0.5385,
+        "auc_ci95": [
+          0.5192,
+          0.5591
+        ],
+        "auc_bootstrap_mean": 0.5388,
+        "auc_bootstrap_std": 0.0099,
+        "brier": 0.2548,
+        "log_loss": 0.7052,
+        "accuracy": 0.5386,
+        "precision": 0.4934,
+        "recall": 0.2259,
+        "f1": 0.3099,
+        "tp": 373,
+        "tn": 1566,
+        "fp": 383,
+        "fn": 1278,
+        "mean_pred_prob": 0.3999,
+        "positive_rate": 0.4586,
+        "per_skill": {
+          "counting": {
+            "n": 738,
+            "auc": 0.5303,
+            "accuracy": 0.5325,
+            "precision": 0.5175,
+            "recall": 0.2114,
+            "f1": 0.3002,
+            "positive_rate": 0.4743
+          },
+          "number_sense": {
+            "n": 570,
+            "auc": 0.5238,
+            "accuracy": 0.5509,
+            "precision": 0.375,
+            "recall": 0.1991,
+            "f1": 0.2601,
+            "positive_rate": 0.3965
+          },
+          "addition": {
+            "n": 901,
+            "auc": 0.5328,
+            "accuracy": 0.5083,
+            "precision": 0.4474,
+            "recall": 0.2009,
+            "f1": 0.2773,
+            "positive_rate": 0.4695
+          },
+          "subtraction": {
+            "n": 999,
+            "auc": 0.56,
+            "accuracy": 0.5516,
+            "precision": 0.5652,
+            "recall": 0.272,
+            "f1": 0.3672,
+            "positive_rate": 0.4785
+          },
+          "word_problem": {
+            "n": 392,
+            "auc": 0.5338,
+            "accuracy": 0.5689,
+            "precision": 0.5342,
+            "recall": 0.2241,
+            "f1": 0.3158,
+            "positive_rate": 0.4439
+          }
+        }
+      },
+      "Random": {
+        "model": "Random",
+        "n_predictions": 3600,
+        "auc": 0.4909,
+        "auc_ci95": [
+          0.4715,
+          0.5091
+        ],
+        "auc_bootstrap_mean": 0.4912,
+        "auc_bootstrap_std": 0.0096,
+        "brier": 0.25,
+        "log_loss": 0.6931,
+        "accuracy": 0.4953,
+        "precision": 0.4537,
+        "recall": 0.4924,
+        "f1": 0.4723,
+        "tp": 813,
+        "tn": 970,
+        "fp": 979,
+        "fn": 838,
+        "mean_pred_prob": 0.5,
+        "positive_rate": 0.4586,
+        "per_skill": {
+          "counting": {
+            "n": 738,
+            "auc": 0.4977,
+            "accuracy": 0.4946,
+            "precision": 0.4695,
+            "recall": 0.5057,
+            "f1": 0.4869,
+            "positive_rate": 0.4743
+          },
+          "number_sense": {
+            "n": 570,
+            "auc": 0.4994,
+            "accuracy": 0.5,
+            "precision": 0.3972,
+            "recall": 0.5044,
+            "f1": 0.4444,
+            "positive_rate": 0.3965
+          },
+          "addition": {
+            "n": 901,
+            "auc": 0.4781,
+            "accuracy": 0.4972,
+            "precision": 0.4653,
+            "recall": 0.4752,
+            "f1": 0.4702,
+            "positive_rate": 0.4695
+          },
+          "subtraction": {
+            "n": 999,
+            "auc": 0.4827,
+            "accuracy": 0.4835,
+            "precision": 0.462,
+            "recall": 0.4833,
+            "f1": 0.4724,
+            "positive_rate": 0.4785
+          },
+          "word_problem": {
+            "n": 392,
+            "auc": 0.5133,
+            "accuracy": 0.5153,
+            "precision": 0.4592,
+            "recall": 0.5172,
+            "f1": 0.4865,
+            "positive_rate": 0.4439
+          }
+        }
+      },
+      "Prior-only": {
+        "model": "Prior-only",
+        "n_predictions": 3600,
+        "auc": 0.5,
+        "auc_ci95": [
+          0.5,
+          0.5
+        ],
+        "auc_bootstrap_mean": 0.5,
+        "auc_bootstrap_std": 0.0,
+        "brier": 0.2689,
+        "log_loss": 0.7346,
+        "accuracy": 0.5414,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "tn": 1949,
+        "fp": 0,
+        "fn": 1651,
+        "mean_pred_prob": 0.315,
+        "positive_rate": 0.4586,
+        "per_skill": {
+          "counting": {
+            "n": 738,
+            "auc": 0.5,
+            "accuracy": 0.5257,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "positive_rate": 0.4743
+          },
+          "number_sense": {
+            "n": 570,
+            "auc": 0.5,
+            "accuracy": 0.6035,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "positive_rate": 0.3965
+          },
+          "addition": {
+            "n": 901,
+            "auc": 0.5,
+            "accuracy": 0.5305,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "positive_rate": 0.4695
+          },
+          "subtraction": {
+            "n": 999,
+            "auc": 0.5,
+            "accuracy": 0.5215,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "positive_rate": 0.4785
+          },
+          "word_problem": {
+            "n": 392,
+            "auc": 0.5,
+            "accuracy": 0.5561,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "positive_rate": 0.4439
+          }
+        }
+      }
+    }
+  },
+  "asr": {
+    "number_word_parser": {
+      "total": 180,
+      "correct": 180,
+      "accuracy": 1.0,
+      "per_language": {
+        "en": {
+          "n": 60,
+          "correct": 60,
+          "accuracy": 1.0,
+          "example_misses": []
+        },
+        "fr": {
+          "n": 60,
+          "correct": 60,
+          "accuracy": 1.0,
+          "example_misses": []
+        },
+        "kin": {
+          "n": 60,
+          "correct": 60,
+          "accuracy": 1.0,
+          "example_misses": []
+        }
+      },
+      "confusion_non_match": {}
+    },
+    "language_detection": {
+      "total": 120,
+      "accuracy": 0.8417,
+      "per_language": {
+        "en": {
+          "n": 30,
+          "precision": 0.7297,
+          "recall": 0.9,
+          "f1": 0.806,
+          "support": 30
+        },
+        "fr": {
+          "n": 30,
+          "precision": 0.9615,
+          "recall": 0.8333,
+          "f1": 0.8929,
+          "support": 30
+        },
+        "kin": {
+          "n": 30,
+          "precision": 0.92,
+          "recall": 0.7667,
+          "f1": 0.8364,
+          "support": 30
+        },
+        "mix": {
+          "n": 30,
+          "precision": 0.8125,
+          "recall": 0.8667,
+          "f1": 0.8387,
+          "support": 30
+        }
+      },
+      "confusion_matrix": {
+        "en": {
+          "en": 27,
+          "mix": 3
+        },
+        "fr": {
+          "fr": 25,
+          "en": 2,
+          "mix": 3
+        },
+        "kin": {
+          "kin": 23,
+          "en": 7
+        },
+        "mix": {
+          "mix": 26,
+          "fr": 1,
+          "en": 1,
+          "kin": 2
+        }
+      },
+      "example_errors": [
+        {
+          "text": "two plus two",
+          "gold": "en",
+          "pred": "mix"
+        },
+        {
+          "text": "six dogs here",
+          "gold": "en",
+          "pred": "mix"
+        },
+        {
+          "text": "zero things",
+          "gold": "en",
+          "pred": "mix"
+        },
+        {
+          "text": "bonjour maîtresse",
+          "gold": "fr",
+          "pred": "en"
+        },
+        {
+          "text": "deux plus deux",
+          "gold": "fr",
+          "pred": "mix"
+        },
+        {
+          "text": "six chiens ici",
+          "gold": "fr",
+          "pred": "mix"
+        },
+        {
+          "text": "je ne sais pas",
+          "gold": "fr",
+          "pred": "en"
+        },
+        {
+          "text": "vingt chats",
+          "gold": "fr",
+          "pred": "mix"
+        },
+        {
+          "text": "ibiyobyabwenge bitatu",
+          "gold": "kin",
+          "pred": "en"
+        },
+        {
+          "text": "muraho mwarimu",
+          "gold": "kin",
+          "pred": "en"
+        }
+      ]
+    },
+    "pitch_shift": {
+      "cases": [
+        {
+          "duration_s": 0.2,
+          "n_samples": 3200,
+          "energy_ratio": 0.9933,
+          "max_abs_out": 0.52,
+          "nan_or_inf": false
+        },
+        {
+          "duration_s": 0.5,
+          "n_samples": 8000,
+          "energy_ratio": 0.9935,
+          "max_abs_out": 0.5219,
+          "nan_or_inf": false
+        },
+        {
+          "duration_s": 1.0,
+          "n_samples": 16000,
+          "energy_ratio": 0.9935,
+          "max_abs_out": 0.5235,
+          "nan_or_inf": false
+        },
+        {
+          "duration_s": 2.0,
+          "n_samples": 32000,
+          "energy_ratio": 0.9933,
+          "max_abs_out": 0.5276,
+          "nan_or_inf": false
+        }
+      ],
+      "mean_energy_ratio": 0.9934,
+      "semitones": -4.5,
+      "all_stable": true
+    }
+  },
+  "feedback": {
+    "template": {
+      "mode": "template",
+      "n": 90,
+      "rubric_mean_0_6": 5.922,
+      "rubric_pass_rate_5of6": 1.0,
+      "bleu2_mean": 0.931,
+      "rouge_l_mean": 0.954,
+      "latency_ms": {
+        "p50": 0.0,
+        "p95": 0.0,
+        "p99": 0.0,
+        "mean": 0.0,
+        "max": 0.0
+      },
+      "per_condition": {
+        "en_correct": {
+          "n": 15,
+          "rubric_mean_0_6": 6.0,
+          "rubric_pass_rate_5of6": 1.0,
+          "bleu2_mean": 0.774,
+          "rouge_l_mean": 0.844,
+          "lang_match_rate": 1.0,
+          "answer_inclusion_on_wrong": null
+        },
+        "en_wrong": {
+          "n": 15,
+          "rubric_mean_0_6": 6.0,
+          "rubric_pass_rate_5of6": 1.0,
+          "bleu2_mean": 1.0,
+          "rouge_l_mean": 1.0,
+          "lang_match_rate": 1.0,
+          "answer_inclusion_on_wrong": 1.0
+        },
+        "fr_correct": {
+          "n": 15,
+          "rubric_mean_0_6": 5.533,
+          "rubric_pass_rate_5of6": 1.0,
+          "bleu2_mean": 0.936,
+          "rouge_l_mean": 0.964,
+          "lang_match_rate": 0.533,
+          "answer_inclusion_on_wrong": null
+        },
+        "fr_wrong": {
+          "n": 15,
+          "rubric_mean_0_6": 6.0,
+          "rubric_pass_rate_5of6": 1.0,
+          "bleu2_mean": 1.0,
+          "rouge_l_mean": 1.0,
+          "lang_match_rate": 1.0,
+          "answer_inclusion_on_wrong": 1.0
+        },
+        "kin_correct": {
+          "n": 15,
+          "rubric_mean_0_6": 6.0,
+          "rubric_pass_rate_5of6": 1.0,
+          "bleu2_mean": 0.877,
+          "rouge_l_mean": 0.917,
+          "lang_match_rate": 1.0,
+          "answer_inclusion_on_wrong": null
+        },
+        "kin_wrong": {
+          "n": 15,
+          "rubric_mean_0_6": 6.0,
+          "rubric_pass_rate_5of6": 1.0,
+          "bleu2_mean": 1.0,
+          "rouge_l_mean": 1.0,
+          "lang_match_rate": 1.0,
+          "answer_inclusion_on_wrong": 1.0
+        }
+      },
+      "example_outputs": [
+        {
+          "lang": "en",
+          "correct": true,
+          "answer": 0,
+          "output": "Yes! 0 is correct! Well done!",
+          "rubric": 6
+        },
+        {
+          "lang": "en",
+          "correct": false,
+          "answer": 0,
+          "output": "Almost! It's 0. You'll get it next time!",
+          "rubric": 6
+        },
+        {
+          "lang": "fr",
+          "correct": true,
+          "answer": 0,
+          "output": "Super ! Tu as trouvé !",
+          "rubric": 5
+        },
+        {
+          "lang": "fr",
+          "correct": false,
+          "answer": 0,
+          "output": "Bon essai ! La réponse est 0. Réessaie !",
+          "rubric": 6
+        },
+        {
+          "lang": "kin",
+          "correct": true,
+          "answer": 0,
+          "output": "Yego! Wabikoze neza!",
+          "rubric": 6
+        },
+        {
+          "lang": "kin",
+          "correct": false,
+          "answer": 0,
+          "output": "Hafi! Ni 0. Uzagera!",
+          "rubric": 6
+        }
+      ]
+    }
+  }
+}

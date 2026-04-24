@@ -1,0 +1,117 @@
+{
+  "template": {
+    "mode": "template",
+    "n": 90,
+    "rubric_mean_0_6": 5.922,
+    "rubric_pass_rate_5of6": 1.0,
+    "bleu2_mean": 0.931,
+    "rouge_l_mean": 0.954,
+    "latency_ms": {
+      "p50": 0.0,
+      "p95": 0.0,
+      "p99": 0.0,
+      "mean": 0.0,
+      "max": 0.0
+    },
+    "per_condition": {
+      "en_correct": {
+        "n": 15,
+        "rubric_mean_0_6": 6.0,
+        "rubric_pass_rate_5of6": 1.0,
+        "bleu2_mean": 0.774,
+        "rouge_l_mean": 0.844,
+        "lang_match_rate": 1.0,
+        "answer_inclusion_on_wrong": null
+      },
+      "en_wrong": {
+        "n": 15,
+        "rubric_mean_0_6": 6.0,
+        "rubric_pass_rate_5of6": 1.0,
+        "bleu2_mean": 1.0,
+        "rouge_l_mean": 1.0,
+        "lang_match_rate": 1.0,
+        "answer_inclusion_on_wrong": 1.0
+      },
+      "fr_correct": {
+        "n": 15,
+        "rubric_mean_0_6": 5.533,
+        "rubric_pass_rate_5of6": 1.0,
+        "bleu2_mean": 0.936,
+        "rouge_l_mean": 0.964,
+        "lang_match_rate": 0.533,
+        "answer_inclusion_on_wrong": null
+      },
+      "fr_wrong": {
+        "n": 15,
+        "rubric_mean_0_6": 6.0,
+        "rubric_pass_rate_5of6": 1.0,
+        "bleu2_mean": 1.0,
+        "rouge_l_mean": 1.0,
+        "lang_match_rate": 1.0,
+        "answer_inclusion_on_wrong": 1.0
+      },
+      "kin_correct": {
+        "n": 15,
+        "rubric_mean_0_6": 6.0,
+        "rubric_pass_rate_5of6": 1.0,
+        "bleu2_mean": 0.877,
+        "rouge_l_mean": 0.917,
+        "lang_match_rate": 1.0,
+        "answer_inclusion_on_wrong": null
+      },
+      "kin_wrong": {
+        "n": 15,
+        "rubric_mean_0_6": 6.0,
+        "rubric_pass_rate_5of6": 1.0,
+        "bleu2_mean": 1.0,
+        "rouge_l_mean": 1.0,
+        "lang_match_rate": 1.0,
+        "answer_inclusion_on_wrong": 1.0
+      }
+    },
+    "example_outputs": [
+      {
+        "lang": "en",
+        "correct": true,
+        "answer": 0,
+        "output": "Yes! 0 is correct! Well done!",
+        "rubric": 6
+      },
+      {
+        "lang": "en",
+        "correct": false,
+        "answer": 0,
+        "output": "Almost! It's 0. You'll get it next time!",
+        "rubric": 6
+      },
+      {
+        "lang": "fr",
+        "correct": true,
+        "answer": 0,
+        "output": "Super ! Tu as trouvé !",
+        "rubric": 5
+      },
+      {
+        "lang": "fr",
+        "correct": false,
+        "answer": 0,
+        "output": "Bon essai ! La réponse est 0. Réessaie !",
+        "rubric": 6
+      },
+      {
+        "lang": "kin",
+        "correct": true,
+        "answer": 0,
+        "output": "Yego! Wabikoze neza!",
+        "rubric": 6
+      },
+      {
+        "lang": "kin",
+        "correct": false,
+        "answer": 0,
+        "output": "Hafi! Ni 0. Uzagera!",
+        "rubric": 6
+      }
+    ]
+  }
+}

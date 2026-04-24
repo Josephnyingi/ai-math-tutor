@@ -1,0 +1,170 @@
+{
+  "number_word_parser": {
+    "total": 180,
+    "correct": 180,
+    "accuracy": 1.0,
+    "per_language": {
+      "en": {
+        "n": 60,
+        "correct": 60,
+        "accuracy": 1.0,
+        "example_misses": []
+      },
+      "fr": {
+        "n": 60,
+        "correct": 60,
+        "accuracy": 1.0,
+        "example_misses": []
+      },
+      "kin": {
+        "n": 60,
+        "correct": 60,
+        "accuracy": 1.0,
+        "example_misses": []
+      }
+    },
+    "confusion_non_match": {}
+  },
+  "language_detection": {
+    "total": 120,
+    "accuracy": 0.8417,
+    "per_language": {
+      "en": {
+        "n": 30,
+        "precision": 0.7297,
+        "recall": 0.9,
+        "f1": 0.806,
+        "support": 30
+      },
+      "fr": {
+        "n": 30,
+        "precision": 0.9615,
+        "recall": 0.8333,
+        "f1": 0.8929,
+        "support": 30
+      },
+      "kin": {
+        "n": 30,
+        "precision": 0.92,
+        "recall": 0.7667,
+        "f1": 0.8364,
+        "support": 30
+      },
+      "mix": {
+        "n": 30,
+        "precision": 0.8125,
+        "recall": 0.8667,
+        "f1": 0.8387,
+        "support": 30
+      }
+    },
+    "confusion_matrix": {
+      "en": {
+        "en": 27,
+        "mix": 3
+      },
+      "fr": {
+        "fr": 25,
+        "en": 2,
+        "mix": 3
+      },
+      "kin": {
+        "kin": 23,
+        "en": 7
+      },
+      "mix": {
+        "mix": 26,
+        "fr": 1,
+        "en": 1,
+        "kin": 2
+      }
+    },
+    "example_errors": [
+      {
+        "text": "two plus two",
+        "gold": "en",
+        "pred": "mix"
+      },
+      {
+        "text": "six dogs here",
+        "gold": "en",
+        "pred": "mix"
+      },
+      {
+        "text": "zero things",
+        "gold": "en",
+        "pred": "mix"
+      },
+      {
+        "text": "bonjour maîtresse",
+        "gold": "fr",
+        "pred": "en"
+      },
+      {
+        "text": "deux plus deux",
+        "gold": "fr",
+        "pred": "mix"
+      },
+      {
+        "text": "six chiens ici",
+        "gold": "fr",
+        "pred": "mix"
+      },
+      {
+        "text": "je ne sais pas",
+        "gold": "fr",
+        "pred": "en"
+      },
+      {
+        "text": "vingt chats",
+        "gold": "fr",
+        "pred": "mix"
+      },
+      {
+        "text": "ibiyobyabwenge bitatu",
+        "gold": "kin",
+        "pred": "en"
+      },
+      {
+        "text": "muraho mwarimu",
+        "gold": "kin",
+        "pred": "en"
+      }
+    ]
+  },
+  "pitch_shift": {
+    "cases": [
+      {
+        "duration_s": 0.2,
+        "n_samples": 3200,
+        "energy_ratio": 0.9933,
+        "max_abs_out": 0.52,
+        "nan_or_inf": false
+      },
+      {
+        "duration_s": 0.5,
+        "n_samples": 8000,
+        "energy_ratio": 0.9935,
+        "max_abs_out": 0.5219,
+        "nan_or_inf": false
+      },
+      {
+        "duration_s": 1.0,
+        "n_samples": 16000,
+        "energy_ratio": 0.9935,
+        "max_abs_out": 0.5235,
+        "nan_or_inf": false
+      },
+      {
+        "duration_s": 2.0,
+        "n_samples": 32000,
+        "energy_ratio": 0.9933,
+        "max_abs_out": 0.5276,
+        "nan_or_inf": false
+      }
+    ],
+    "mean_energy_ratio": 0.9934,
+    "semitones": -4.5,
+    "all_stable": true
+  }
+}

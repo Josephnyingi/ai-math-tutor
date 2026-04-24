@@ -211,7 +211,7 @@ def build_ui():
         font=[gr.themes.GoogleFont("Nunito"), "sans-serif"],
     )
 
-    with gr.Blocks(theme=theme, title="AI Math Tutor") as demo:
+    with gr.Blocks(title="AI Math Tutor") as demo:
         sess_state = gr.State(None)
 
         gr.HTML("""
@@ -271,8 +271,8 @@ def build_ui():
             if item:
                 q = cl.stem(item, lang)
                 img = _item_image(item)
-                return sess, f"### {q}", img, "", "", ""
-            return sess, "### No items available", None, "", "", ""
+                return sess, f"### {q}", img, None, "", ""
+            return sess, "### No items available", None, None, "", ""
 
         start_btn.click(
             on_start,
@@ -298,9 +298,9 @@ def build_ui():
             outputs=[sess_state, question_md, item_image, audio_input, tap_input, feedback_box, debug_box],
         )
 
-    return demo
+    return demo, theme
 
 
 if __name__ == "__main__":
-    app = build_ui()
-    app.launch(server_name="0.0.0.0", server_port=7860, share=False)
+    app, theme = build_ui()
+    app.launch(server_name="0.0.0.0", server_port=7860, share=False, theme=theme)

@@ -14,6 +14,88 @@ du -sh tutor/
 
 ---
 
+## Reported Metrics
+
+Every number below is produced by a reproducible script in `scripts/` and
+written to `figures/`. Regenerate everything in one command:
+
+```bash
+python3 scripts/eval_end_to_end.py
+# → writes figures/metrics.json, figures/metrics.md, and per-module artifacts
+```
+
+### Headline (held-out, seed=42, all models evaluated on the same 3,600 predictions)
+
+| Layer | Metric | Value | Baseline / CI |
+|---|---|---|---|
+| **Knowledge Tracing (BKT)** | AUC | **0.5662** | 95% CI [0.5473, 0.5847] |
+| Knowledge Tracing — Elo baseline | AUC | 0.5170 | Δ BKT − Elo = **+0.0492** |
+| Knowledge Tracing — Prior-only | AUC | 0.5000 | ablation: no learning |
+| Knowledge Tracing — Random | AUC | 0.4909 | ablation: chance |
+| Knowledge Tracing (BKT) | Brier ↓ | 0.2852 | log-loss 0.7904 |
+| **ASR number-word parser** | Accuracy | **100.0 %** | 180 utt (60/lang) across EN/FR/KIN |
+| **Language detection** | Accuracy | **84.2 %** | 120 utt, 30 each EN/FR/KIN/mix |
+| Language detection — EN F1 | 0.806 | | P 0.730 / R 0.900 |
+| Language detection — FR F1 | 0.893 | | P 0.962 / R 0.833 |
+| Language detection — KIN F1 | 0.836 | | P 0.920 / R 0.767 |
+| Language detection — mix F1 | 0.839 | | P 0.812 / R 0.867 |
+| Pitch-shift normaliser | Energy ratio | 0.993 | target ≈ 1.0, NaN/Inf-free |
+| **Feedback (template mode)** | Rubric score | **5.92 / 6** | ≥ 5/6 on **100 %** of 90 cases |
+| Feedback (template mode) | BLEU-2 | 0.931 | vs. 3 gold references per cell |
+| Feedback (template mode) | ROUGE-L | 0.954 | — |
+| Visual grounding (counting) | Accuracy | **100 %** | blob counter, n = 1–10 |
+
+### BKT — per-skill breakdown
+
+| Skill | N (held-out) | AUC | Precision | Recall | F1 |
+|---|---|---|---|---|---|
+| counting | 738 | 0.570 | 0.502 | 0.631 | 0.560 |
+| number_sense | 570 | 0.530 | 0.413 | 0.566 | 0.478 |
+| addition | 901 | 0.577 | 0.497 | 0.660 | 0.567 |
+| subtraction | 999 | 0.561 | 0.521 | 0.638 | 0.574 |
+| word_problem | 392 | 0.576 | 0.518 | 0.506 | 0.512 |
+
+### Latency (p50 / p95, measured on the run machine)
+
+| Stage | p50 | p95 | N |
+|---|---|---|---|
+| Language detection | < 0.01 ms | < 0.01 ms | 2 000 |
+| BKT posterior update | < 0.01 ms | < 0.01 ms | 2 000 |
+| Adaptive item selection | < 0.01 ms | < 0.01 ms | 200 |
+| Visual grounding (blob count) | 2.37 ms | 3.98 ms | 50 |
+| Template feedback | < 0.01 ms | < 0.01 ms | 200 |
+| End-to-end (detect → parse → BKT → feedback) | < 0.01 ms | < 0.01 ms | 200 |
+
+The end-to-end scoring loop (without ASR inference) completes in well under 1 ms
+per response, which is why the published pipeline target of **< 2.5 s** is
+dominated by Whisper transcription and audio I/O — not by the tutor logic.
+
+### What each eval script produces
+
+| Script | Output | Headline numbers |
+|---|---|---|
+| `scripts/eval_bkt.py` | `figures/bkt_metrics.{json,md}`, `bkt_auc_ci.png`, `bkt_per_skill.png` | AUC + 95% CI vs. 4 baselines, per-skill P/R/F1 |
+| `scripts/eval_asr.py` | `figures/asr_metrics.{json,md}`, `asr_confusion.png` | Number-parser accuracy, lang-detect P/R/F1, pitch-shift stability |
+| `scripts/eval_feedback.py` | `figures/feedback_metrics.{json,md}`, `feedback_latency.png` | 6-point rubric, BLEU-2, ROUGE-L, p50/p95 latency, 90 cases |
+| `scripts/eval_end_to_end.py` | `figures/metrics.{json,md}` | Aggregates all of the above plus per-stage latency |
+
+### Optional: Whisper-tiny WER on real audio
+
+The offline eval above exercises the deterministic parts of the ASR stack
+(pitch normaliser + number parser + language detector). To benchmark Whisper
+itself on real Kinyarwanda speech (e.g. Mozilla Common Voice v17 KIN test
+split) or child-recorded utterances, drop a CSV and run:
+
+```bash
+python3 scripts/eval_asr.py --audio-csv data/asr_test.csv
+# CSV columns: audio_path,reference,language
+```
+
+The script reports WER + CER per language under both raw and pitch-normalised
+conditions so the `–4.5 semitone` child correction can be ablated directly.
+
+---
+
 ## 2-Command Setup (free Colab CPU)
 
 ```bash

@@ -15,7 +15,9 @@ inference.
 
 **→ [nyingi101-math-tutor.hf.space](https://nyingi101-math-tutor.hf.space)**
 
-No install, no sign-in. Select the child's **age (5–9)** and **language**, press **START**, and interact by typing or speaking.
+No install, no sign-in. Select the child's **age (5–9)** and **language**, press **START**, and interact by tapping a number or speaking.
+
+![Math Adventure demo UI](assets/demo_screenshot.png)
 
 ---
 

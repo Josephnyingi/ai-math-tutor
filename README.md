@@ -433,6 +433,26 @@ Gaussian noise σ ≈ 4.65
 
 ## Product & UX design
 
+### Child-first interface
+
+A key piece of feedback from reviewers: young children learn through
+**pictures, touch, and play** — not text boxes and keyboards. The interface
+was redesigned around that principle:
+
+| Before | After |
+| --- | --- |
+| Text box — child must type a number | **11 large coloured tap buttons (0–10)** — one tap submits the answer |
+| Plain text feedback in a box | **Animated HTML panel** — green bounce + ✅ for correct, warm amber + 💭 for wrong |
+| No visible progress | **Star bar** (⭐ fills as correct answers accumulate, ☆ shows how far to go) |
+| Small Markdown question text | **Large gradient question card** — high-contrast, easy to see across a table |
+| Separate Submit button for voice | **Auto-submits** when recording stops — no extra tap needed |
+| Plain text language labels | **Flag + animal emojis** on selectors (🇷🇼 🇹🇿 🇫🇷 🇬🇧, 🐣🐥🌱🌟🚀) — visual cues for pre-readers |
+
+The entire interaction flow now requires **zero reading** for the child:
+they see a picture, hear the question, and tap a coloured number. Voice
+input remains available as an optional layer for children who prefer to
+speak their answer.
+
 ### First 90 seconds (6-year-old Kinyarwanda speaker, first launch)
 
 | Time | What happens |

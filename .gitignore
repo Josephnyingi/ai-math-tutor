@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.db
+*.gguf
+*.onnx
+data/tts/
+data/synthetic_child_audio/
+figures/*.png
+.env
+*.egg-info/
+dist/
+build/
+.ipynb_checkpoints/

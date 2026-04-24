@@ -8,6 +8,7 @@ __pycache__/
 data/tts/
 data/synthetic_child_audio/
 figures/*.png
+examples/sample.db
 .env
 *.egg-info/
 dist/

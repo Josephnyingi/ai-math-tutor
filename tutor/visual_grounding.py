@@ -20,22 +20,23 @@ import numpy as np
 # Blob counter baseline (no heavy deps)
 # ------------------------------------------------------------------
 
-def _blob_count(image: np.ndarray, min_area: int = 50) -> int:
+def _blob_count(image: np.ndarray, min_area: int = 30) -> int:
     """
-    Count distinct bright blobs in a grayscale or RGB image.
-    Works well for simple rendered stimuli (solid objects on plain background).
+    Count distinct objects in a rendered stimulus image.
+    Objects are assumed darker than the background (coloured shapes on white).
     """
     # Convert to grayscale
     if image.ndim == 3:
         gray = (0.299 * image[:, :, 0] +
                 0.587 * image[:, :, 1] +
-                0.114 * image[:, :, 2]).astype(np.uint8)
+                0.114 * image[:, :, 2]).astype(np.float32)
     else:
-        gray = image.astype(np.uint8)
+        gray = image.astype(np.float32)
 
-    # Threshold (Otsu-style: mean-based)
-    thresh = gray.mean()
-    binary = (gray > thresh).astype(np.uint8)
+    # Detect objects: pixels significantly darker than background.
+    # Use mean - 0.5*std as threshold so sparse circles on white are captured.
+    thresh = gray.mean() - 0.5 * gray.std()
+    binary = (gray < thresh).astype(np.uint8)
 
     # Connected components via simple flood-fill BFS
     visited = np.zeros_like(binary, dtype=bool)

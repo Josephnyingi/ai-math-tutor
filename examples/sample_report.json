@@ -1,0 +1,43 @@
+{
+  "learner_id": "amani",
+  "week_starting": "2026-04-17",
+  "sessions": 3,
+  "skills": {
+    "counting": {
+      "current": 0.33,
+      "delta": -0.333,
+      "weekly_attempts": 6,
+      "weekly_accuracy": 0.167
+    },
+    "number_sense": {
+      "current": 0.75,
+      "delta": 0.25,
+      "weekly_attempts": 4,
+      "weekly_accuracy": 0.75
+    },
+    "addition": {
+      "current": 1.0,
+      "delta": 0.5,
+      "weekly_attempts": 9,
+      "weekly_accuracy": 1.0
+    },
+    "subtraction": {
+      "current": 0.778,
+      "delta": 0.278,
+      "weekly_attempts": 9,
+      "weekly_accuracy": 0.778
+    },
+    "word_problem": {
+      "current": 0.5,
+      "delta": 0.0,
+      "weekly_attempts": 2,
+      "weekly_accuracy": 0.5
+    }
+  },
+  "icons_for_parent": {
+    "overall_arrow": "up",
+    "best_skill": "addition",
+    "needs_help": "counting"
+  },
+  "voiced_summary_audio": "tts/reports/amani_week_2026-04-17.wav"
+}

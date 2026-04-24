@@ -3,19 +3,11 @@ demo.py — Child-facing Gradio demo for the AI Math Tutor.
 
 Run:
     pip install -r requirements.txt
-    python demo.py
-
-First-time open sequence (first 90 seconds):
-  0 s  — Warm welcome audio plays in Kinyarwanda + English
-  5 s  — Big, icon-only "START" button appears (no reading required)
-  10 s — If child hasn't tapped: gentle audio prompt replays, animated arrow bounces
-  15 s — Diagnostic probe #1 appears (lowest difficulty counting item)
-  ~90 s — Five diagnostic probes complete; BKT initialised; adaptive session begins
+    python3 scripts/generate_curriculum.py   # one-time
+    python3 demo.py                          # opens http://localhost:7860
 """
 from __future__ import annotations
 
-import json
-import os
 import time
 from pathlib import Path
 
@@ -26,13 +18,13 @@ from tutor import curriculum_loader as cl
 from tutor.adaptive import LearnerState
 from tutor.lang_detect import detect as lang_detect, reply_lang
 from tutor.asr_adapt import transcribe, extract_integer, is_silence
-from tutor.visual_grounding import render_counting_stimulus, count_objects
+from tutor.visual_grounding import render_counting_stimulus
 from tutor.model_loader import generate_feedback
 from tutor.progress_store import ProgressStore
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Paths
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 DATA_DIR = Path("data/T3.1_Math_Tutor")
 DB_PATH = Path("tutor_progress.db")
 CURRICULUM_PATH = DATA_DIR / "curriculum_full.json"
@@ -42,15 +34,15 @@ if not CURRICULUM_PATH.exists():
 ALL_ITEMS = cl.load(CURRICULUM_PATH)
 STORE = ProgressStore(DB_PATH)
 
-# ------------------------------------------------------------------
-# Session state (Gradio uses dict-based state)
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Session helpers
+# ---------------------------------------------------------------------------
 
 def new_session(learner_id: str, lang: str = "en", age: int = 7) -> dict:
     saved = STORE.load_latest_state(learner_id)
     if saved:
         state = LearnerState.from_dict(saved)
-        state.age = age  # allow age update each session
+        state.age = age
     else:
         state = LearnerState(learner_id=learner_id, lang=lang, age=age)
         STORE.add_learner(learner_id, display_name=learner_id)
@@ -68,13 +60,14 @@ def new_session(learner_id: str, lang: str = "en", age: int = 7) -> dict:
         "queue": probes,
         "current_item": None,
         "session_id": STORE.start_session(learner_id, state.to_dict(), lang),
-        "phase": "diagnostic",  # diagnostic → adaptive
+        "phase": "diagnostic",
         "silence_count": 0,
+        "total_correct": 0,
+        "total_answered": 0,
     }
 
 
 def get_next_item(sess: dict) -> dict:
-    """Pop next item from queue or select adaptively."""
     state: LearnerState = sess["state"]
     if sess["queue"]:
         item = sess["queue"].pop(0)
@@ -86,32 +79,25 @@ def get_next_item(sess: dict) -> dict:
     return sess
 
 
-# ------------------------------------------------------------------
-# Response processing
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Core response processor
+# ---------------------------------------------------------------------------
 
 def process_response(
     sess: dict,
     audio_data: tuple | None,
     tap_answer: str,
-) -> tuple[dict, str, np.ndarray | None, str]:
-    """
-    Handle a child response (voice or tap).
-    Returns: (updated_sess, feedback_text, image_array, debug_info)
-    """
+) -> tuple[dict, str, bool, np.ndarray | None, str]:
+    """Returns (sess, feedback_text, is_correct, image, debug)."""
     item = sess.get("current_item")
     if item is None:
-        return sess, "Let's start!", None, ""
+        return sess, "Let's start!", False, None, ""
 
     state: LearnerState = sess["state"]
     lang = sess["lang"]
     t0 = time.time()
 
-    # ------------------------------------------------------------------
-    # 1. Parse answer
-    # ------------------------------------------------------------------
     child_text = ""
-    detected_lang = lang
 
     if audio_data is not None:
         sr, audio_np = audio_data
@@ -126,69 +112,47 @@ def process_response(
 
         if is_silence(audio_f32):
             sess["silence_count"] += 1
-            if sess["silence_count"] >= 2:
-                # Two consecutive silences → repeat prompt gently
-                return sess, _silence_prompt(lang), _item_image(item), ""
-            return sess, _silence_prompt(lang), _item_image(item), ""
+            return sess, _silence_prompt(lang), False, _item_image(item), ""
 
         sess["silence_count"] = 0
-        child_text, detected_lang, conf = transcribe(audio_f32, lang_hint=lang)
+        child_text, detected_lang, _ = transcribe(audio_f32, lang_hint=lang)
         if detected_lang == "mix":
             lang = reply_lang(detected_lang, fallback=lang)
-        elif detected_lang in ("en", "fr", "kin"):
+        elif detected_lang in ("en", "fr", "kin", "sw"):
             lang = detected_lang
         sess["lang"] = lang
 
     elif tap_answer.strip():
         child_text = tap_answer.strip()
 
-    # ------------------------------------------------------------------
-    # 2. Score
-    # ------------------------------------------------------------------
     child_int = extract_integer(child_text)
     is_correct = child_int is not None and child_int == item["answer_int"]
 
-    # ------------------------------------------------------------------
-    # 3. Visual grounding items
-    # ------------------------------------------------------------------
     image_arr = _item_image(item)
 
-    # ------------------------------------------------------------------
-    # 4. Update knowledge state
-    # ------------------------------------------------------------------
     state.record_response(item, is_correct)
     latency_ms = int((time.time() - t0) * 1000)
     STORE.log_response(
-        sess["learner_id"],
-        sess["session_id"],
-        item["id"],
-        item["skill"],
-        item.get("difficulty", 5),
-        is_correct,
-        latency_ms,
+        sess["learner_id"], sess["session_id"],
+        item["id"], item["skill"],
+        item.get("difficulty", 5), is_correct, latency_ms,
     )
 
-    # ------------------------------------------------------------------
-    # 5. Generate feedback
-    # ------------------------------------------------------------------
     feedback = generate_feedback(is_correct, item["answer_int"], lang, child_text)
 
-    # ------------------------------------------------------------------
-    # 6. Dyscalculia early warning
-    # ------------------------------------------------------------------
     warnings = state.dyscalculia_warning()
     if warnings:
-        feedback += f"\n\n[Parent: {', '.join(warnings)} skill(s) may need teacher attention]"
+        feedback += f"\n\n[Parent: {', '.join(warnings)} skill(s) may need attention]"
 
-    # ------------------------------------------------------------------
-    # 7. Advance to next item
-    # ------------------------------------------------------------------
+    sess["total_answered"] = sess.get("total_answered", 0) + 1
+    if is_correct:
+        sess["total_correct"] = sess.get("total_correct", 0) + 1
+
     STORE.end_session(sess["session_id"], state.to_dict())
     sess = get_next_item(sess)
 
-    total_elapsed = time.time() - t0
-    debug = f"item={item['id']} correct={is_correct} lang={lang} latency={total_elapsed:.2f}s"
-    return sess, feedback, image_arr, debug
+    debug = f"item={item['id']} correct={is_correct} lang={lang} latency={latency_ms}ms"
+    return sess, feedback, is_correct, image_arr, debug
 
 
 def _item_image(item: dict) -> np.ndarray | None:
@@ -200,17 +164,94 @@ def _item_image(item: dict) -> np.ndarray | None:
 
 def _silence_prompt(lang: str) -> str:
     msgs = {
-        "en": "I didn't hear you. Try again! Tap the number or speak.",
-        "fr": "Je ne t'ai pas entendu. Essaie encore !",
-        "kin": "Sinumvise. Ongera ugerageze!",
-        "sw": "Sikukusikia. Jaribu tena! Gonga nambari au sema.",
+        "en": "I didn't hear you — tap a number or try again!",
+        "fr": "Je ne t'ai pas entendu — touche un chiffre !",
+        "kin": "Sinumvise — kanda umubare!",
+        "sw": "Sikukusikia — gonga nambari!",
     }
     return msgs.get(lang, msgs["en"])
 
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# HTML renderers
+# ---------------------------------------------------------------------------
+
+def _question_html(text: str) -> str:
+    return (
+        '<div style="font-size:1.7em; font-weight:800; text-align:center; '
+        'color:#1a3a8f; padding:22px 16px; background:linear-gradient(135deg,#e8f0fe,#f3e8ff); '
+        'border-radius:20px; min-height:90px; display:flex; align-items:center; '
+        f'justify-content:center; line-height:1.3">{text}</div>'
+    )
+
+
+def _feedback_html(text: str, is_correct: bool) -> str:
+    if not text:
+        return ""
+    if is_correct:
+        return (
+            '<div style="background:#d4edda; border:3px solid #28a745; border-radius:20px; '
+            'padding:18px; text-align:center; font-size:1.5em; font-weight:800; color:#155724; '
+            'animation:pop .25s ease" class="fb-panel">'
+            f'✅ {text}</div>'
+            '<style>@keyframes pop{{0%{{transform:scale(.85)}}100%{{transform:scale(1)}}}}'
+            '.fb-panel{{animation:pop .25s ease}}</style>'
+        )
+    return (
+        '<div style="background:#fff3cd; border:3px solid #ffc107; border-radius:20px; '
+        'padding:18px; text-align:center; font-size:1.5em; font-weight:800; color:#7d5a00">'
+        f'💭 {text}</div>'
+    )
+
+
+def _progress_html(correct: int, answered: int) -> str:
+    stars = min(correct, 10)
+    bar = "⭐" * stars + "☆" * (10 - stars)
+    label = f"{correct}/{answered} correct" if answered else "Answer to earn stars!"
+    return (
+        f'<div style="text-align:center; padding:8px 0">'
+        f'<div style="font-size:1.6em; letter-spacing:3px">{bar}</div>'
+        f'<div style="font-size:0.85em; color:#666; margin-top:2px">{label}</div>'
+        f'</div>'
+    )
+
+
+# ---------------------------------------------------------------------------
 # Gradio UI
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+
+# Number button colours (0–10)
+_NUM_COLORS = [
+    "#6c757d",  # 0 grey
+    "#2ecc71",  # 1 green
+    "#1abc9c",  # 2 teal
+    "#3498db",  # 3 blue
+    "#9b59b6",  # 4 purple
+    "#e91e63",  # 5 pink
+    "#f39c12",  # 6 amber
+    "#e74c3c",  # 7 red
+    "#1e90ff",  # 8 dodger blue
+    "#8e44ad",  # 9 violet
+    "#2c3e50",  # 10 dark
+]
+
+_NUM_CSS = "\n".join(
+    f'.nb{i} button {{ background:{c} !important; color:white !important; '
+    f'font-size:1.7em !important; font-weight:900 !important; '
+    f'border-radius:14px !important; height:68px !important; '
+    f'transition:transform .1s !important; border:none !important; }}\n'
+    f'.nb{i} button:hover {{ transform:scale(1.07) !important; }}\n'
+    f'.nb{i} button:active {{ transform:scale(0.93) !important; }}'
+    for i, c in enumerate(_NUM_COLORS)
+)
+
+_GLOBAL_CSS = _NUM_CSS + """
+.start-btn button {
+    font-size:1.3em !important; font-weight:800 !important;
+    border-radius:16px !important; height:60px !important;
+}
+"""
+
 
 def build_ui():
     theme = gr.themes.Soft(
@@ -218,62 +259,109 @@ def build_ui():
         font=[gr.themes.GoogleFont("Nunito"), "sans-serif"],
     )
 
-    with gr.Blocks(title="AI Math Tutor") as demo:
+    with gr.Blocks(title="🌟 Math Adventure", css=_GLOBAL_CSS) as demo:
         sess_state = gr.State(None)
 
+        # ── Header ──────────────────────────────────────────────────────
         gr.HTML("""
-        <div style="text-align:center; padding:20px">
-          <h1 style="font-size:2.5em; color:#1a56db">🧮 Math Tutor</h1>
-          <p style="font-size:1.2em; color:#555">
-            Mwarimu wa Hesabu &nbsp;|&nbsp; Tuteur Maths &nbsp;|&nbsp; Math Tutor
+        <div style="text-align:center; padding:18px 12px 14px;
+                    background:linear-gradient(135deg,#1a56db,#9333ea);
+                    border-radius:20px; margin-bottom:14px">
+          <div style="font-size:3.2em; line-height:1.1">🦁</div>
+          <h1 style="color:white; font-size:2.1em; margin:4px 0 2px; font-weight:900">
+            Math Adventure!
+          </h1>
+          <p style="color:rgba(255,255,255,0.88); font-size:0.95em; margin:0">
+            Akanyamaswa k'Imibare &nbsp;·&nbsp; Aventure Maths &nbsp;·&nbsp; Hisabu ya Kusisimua
           </p>
         </div>
         """)
 
-        with gr.Row():
-            with gr.Column(scale=1):
+        with gr.Row(equal_height=False):
+
+            # ── Setup panel (left) ───────────────────────────────────────
+            with gr.Column(scale=1, min_width=210):
                 learner_id_box = gr.Textbox(
-                    label="Learner name / Izina",
+                    label="👤 Name / Izina / Nom / Jina",
                     placeholder="e.g. Amani",
                     max_lines=1,
                 )
                 age_radio = gr.Radio(
-                    choices=[("5 yrs", 5), ("6 yrs", 6), ("7 yrs", 7), ("8 yrs", 8), ("9 yrs", 9)],
+                    choices=[("5 yrs 🐣", 5), ("6 yrs 🐥", 6), ("7 yrs 🌱", 7),
+                             ("8 yrs 🌟", 8), ("9 yrs 🚀", 9)],
                     value=7,
-                    label="Age / Imyaka / Âge / Umri",
+                    label="🎂 Age / Imyaka / Âge / Umri",
                 )
                 lang_radio = gr.Radio(
-                    choices=[("Kinyarwanda", "kin"), ("Kiswahili", "sw"), ("Français", "fr"), ("English", "en")],
+                    choices=[
+                        ("🇷🇼 Kinyarwanda", "kin"),
+                        ("🇹🇿 Kiswahili", "sw"),
+                        ("🇫🇷 Français", "fr"),
+                        ("🇬🇧 English", "en"),
+                    ],
                     value="kin",
-                    label="Language / Lugha / Langue / Ururimi",
+                    label="🌍 Language / Lugha / Langue / Ururimi",
                 )
-                start_btn = gr.Button("▶  START / TANGIRA", variant="primary", size="lg")
+                start_btn = gr.Button(
+                    "▶  START / TANGIRA",
+                    variant="primary",
+                    size="lg",
+                    elem_classes=["start-btn"],
+                )
 
-            with gr.Column(scale=2):
-                question_md = gr.Markdown("### Press START to begin!")
-                item_image = gr.Image(label="", height=200, show_label=False)
+            # ── Game panel (right) ───────────────────────────────────────
+            with gr.Column(scale=3):
+
+                progress_html = gr.HTML(_progress_html(0, 0))
+
+                question_html = gr.HTML(
+                    _question_html("Press START to begin! 👆")
+                )
+
+                item_image = gr.Image(label="", height=270, show_label=False)
+
                 audio_input = gr.Audio(
                     sources=["microphone"],
                     type="numpy",
-                    label="🎤 Say your answer / Vuga igisubizo",
+                    label="🎤 Speak / Vuga / Parle / Sema  (optional)",
                 )
-                tap_input = gr.Textbox(
-                    label="Or type / Andika",
-                    placeholder="e.g. 5",
-                    max_lines=1,
-                )
-                submit_btn = gr.Button("✅ Submit / Ohereza", size="lg")
-                feedback_box = gr.Textbox(
-                    label="Feedback",
-                    interactive=False,
-                    lines=3,
-                )
-                debug_box = gr.Textbox(label="Debug", visible=False, interactive=False)
 
-        # ------------------------------------------------------------------
-        # Event handlers
-        # ------------------------------------------------------------------
+                gr.HTML(
+                    '<p style="text-align:center; font-weight:800; font-size:1.1em; '
+                    'color:#444; margin:10px 0 4px">👇 Tap your answer:</p>'
+                )
 
+                # Number pad row 1: 0–5
+                with gr.Row():
+                    num_btns_r1 = [
+                        gr.Button(str(n), elem_classes=[f"nb{n}"])
+                        for n in range(6)
+                    ]
+                # Number pad row 2: 6–10
+                with gr.Row():
+                    num_btns_r2 = [
+                        gr.Button(str(n), elem_classes=[f"nb{n}"])
+                        for n in range(6, 11)
+                    ]
+
+                feedback_html = gr.HTML("")
+
+                debug_box = gr.Textbox(
+                    label="Debug", visible=False, interactive=False
+                )
+
+        # ── Shared output list ───────────────────────────────────────────
+        OUTPUTS = [
+            sess_state,
+            question_html,
+            item_image,
+            audio_input,
+            progress_html,
+            feedback_html,
+            debug_box,
+        ]
+
+        # ── on_start ─────────────────────────────────────────────────────
         def on_start(learner_id, age, lang):
             if not learner_id.strip():
                 learner_id = "learner_1"
@@ -283,31 +371,65 @@ def build_ui():
             if item:
                 q = cl.stem(item, lang)
                 img = _item_image(item)
-                return sess, f"### {q}", img, None, "", ""
-            return sess, "### No items available", None, None, "", ""
+            else:
+                q, img = "No items available", None
+            return (
+                sess,
+                _question_html(q),
+                img,
+                None,
+                _progress_html(0, 0),
+                "",
+                "",
+            )
 
         start_btn.click(
             on_start,
             inputs=[learner_id_box, age_radio, lang_radio],
-            outputs=[sess_state, question_md, item_image, audio_input, tap_input, feedback_box],
+            outputs=OUTPUTS,
         )
 
-        def on_submit(sess, audio, tap):
+        # ── on_submit (shared by audio + number pad) ──────────────────────
+        def on_submit(sess, audio, tap_answer):
             if sess is None:
-                return None, "### Press START first", None, "", "", "no session"
-            sess, feedback, img, debug = process_response(sess, audio, tap)
+                return (
+                    None,
+                    _question_html("Press START first! 👆"),
+                    None, None,
+                    _progress_html(0, 0),
+                    "",
+                    "no session",
+                )
+            sess, feedback, is_correct, img, debug = process_response(
+                sess, audio, tap_answer
+            )
             item = sess.get("current_item")
-            if item:
-                q = cl.stem(item, sess["lang"])
-                question = f"### {q}"
-            else:
-                question = "### All done! Great work!"
-            return sess, question, img, None, "", feedback, debug
+            q = cl.stem(item, sess["lang"]) if item else "🎉 All done! Great work!"
+            return (
+                sess,
+                _question_html(q),
+                img,
+                None,
+                _progress_html(sess.get("total_correct", 0), sess.get("total_answered", 0)),
+                _feedback_html(feedback, is_correct),
+                debug,
+            )
 
-        submit_btn.click(
-            on_submit,
-            inputs=[sess_state, audio_input, tap_input],
-            outputs=[sess_state, question_md, item_image, audio_input, tap_input, feedback_box, debug_box],
+        # Number pad buttons auto-submit with their value
+        all_num_btns = num_btns_r1 + num_btns_r2
+        for btn in all_num_btns:
+            num_val = btn.value  # "0" … "10"
+            btn.click(
+                fn=lambda s, a, n=num_val: on_submit(s, a, n),
+                inputs=[sess_state, audio_input],
+                outputs=OUTPUTS,
+            )
+
+        # Audio submit (after recording)
+        audio_input.change(
+            fn=lambda s, a: on_submit(s, a, ""),
+            inputs=[sess_state, audio_input],
+            outputs=OUTPUTS,
         )
 
     return demo, theme

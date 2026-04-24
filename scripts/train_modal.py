@@ -162,7 +162,7 @@ def train_tinyllama(
         learning_rate=2e-4,
         fp16=True,
         logging_steps=20,
-        eval_strategy="epoch",
+        evaluation_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         report_to="none",

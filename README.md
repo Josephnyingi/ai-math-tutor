@@ -7,11 +7,17 @@ numeracy). Runs on a cheap Android tablet. Handles **Kinyarwanda, Kiswahili,
 French, English, and code-switched** speech. Never calls the internet at
 inference.
 
-## Live Demo
+---
 
-> **Try it now →** [nyingi101-math-tutor.hf.space](https://nyingi101-math-tutor.hf.space)
->
-> Select your child's age (5–9), language, and tap **START**. No sign-in needed.
+## 🟢 Interactive Demo
+
+[![Open in HuggingFace Spaces](https://img.shields.io/badge/🤗%20HuggingFace-Interactive%20Demo-blue?style=for-the-badge)](https://nyingi101-math-tutor.hf.space)
+
+**→ [nyingi101-math-tutor.hf.space](https://nyingi101-math-tutor.hf.space)**
+
+No install, no sign-in. Select the child's **age (5–9)** and **language**, press **START**, and interact by typing or speaking.
+
+---
 
 ## Contents
 
@@ -668,6 +674,7 @@ produces the evidence base that unlocks the next round of funding.
 
 | Artefact | Where |
 |---|---|
+| **Interactive Demo** | [nyingi101-math-tutor.hf.space](https://nyingi101-math-tutor.hf.space) |
 | Code | [github.com/Josephnyingi/ai-math-tutor](https://github.com/Josephnyingi/ai-math-tutor) |
 | TinyLlama LoRA adapter (production) | [huggingface.co/Nyingi101/math-tutor-tinyllama-lora](https://huggingface.co/Nyingi101/math-tutor-tinyllama-lora) |
 | distilgpt2 LoRA adapter (CPU demo) | `tutor/adapters/distilgpt2-numeracy-lora/` (in repo) |

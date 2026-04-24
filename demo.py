@@ -46,18 +46,24 @@ STORE = ProgressStore(DB_PATH)
 # Session state (Gradio uses dict-based state)
 # ------------------------------------------------------------------
 
-def new_session(learner_id: str, lang: str = "en") -> dict:
+def new_session(learner_id: str, lang: str = "en", age: int = 7) -> dict:
     saved = STORE.load_latest_state(learner_id)
     if saved:
         state = LearnerState.from_dict(saved)
+        state.age = age  # allow age update each session
     else:
-        state = LearnerState(learner_id=learner_id, lang=lang)
+        state = LearnerState(learner_id=learner_id, lang=lang, age=age)
         STORE.add_learner(learner_id, display_name=learner_id)
     state.lang = lang
-    probes = cl.sample_diagnostic_probes(ALL_ITEMS, n_per_skill=1)
+    cfg = state.age_config
+    probes = cl.sample_diagnostic_probes(
+        ALL_ITEMS, n_per_skill=1,
+        diff_min=cfg["diff_min"], diff_max=cfg["diff_max"],
+    )
     return {
         "learner_id": learner_id,
         "lang": lang,
+        "age": age,
         "state": state,
         "queue": probes,
         "current_item": None,
@@ -231,6 +237,11 @@ def build_ui():
                     placeholder="e.g. Amani",
                     max_lines=1,
                 )
+                age_radio = gr.Radio(
+                    choices=[("5 yrs", 5), ("6 yrs", 6), ("7 yrs", 7), ("8 yrs", 8), ("9 yrs", 9)],
+                    value=7,
+                    label="Age / Imyaka / Âge / Umri",
+                )
                 lang_radio = gr.Radio(
                     choices=[("Kinyarwanda", "kin"), ("Kiswahili", "sw"), ("Français", "fr"), ("English", "en")],
                     value="kin",
@@ -263,10 +274,10 @@ def build_ui():
         # Event handlers
         # ------------------------------------------------------------------
 
-        def on_start(learner_id, lang):
+        def on_start(learner_id, age, lang):
             if not learner_id.strip():
                 learner_id = "learner_1"
-            sess = new_session(learner_id.strip(), lang)
+            sess = new_session(learner_id.strip(), lang, age=int(age))
             sess = get_next_item(sess)
             item = sess["current_item"]
             if item:
@@ -277,7 +288,7 @@ def build_ui():
 
         start_btn.click(
             on_start,
-            inputs=[learner_id_box, lang_radio],
+            inputs=[learner_id_box, age_radio, lang_radio],
             outputs=[sess_state, question_md, item_image, audio_input, tap_input, feedback_box],
         )
 

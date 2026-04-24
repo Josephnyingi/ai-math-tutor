@@ -31,6 +31,20 @@ ELO_K = 32
 ELO_INIT = 800
 ITEM_ELO_INIT = 1000  # items start slightly harder than learners
 
+# Age → curriculum band + difficulty ceiling + BKT prior boost
+AGE_BANDS = {
+    5: {"band": "5-6", "diff_min": 1, "diff_max": 2, "p_known_prior": 0.05},
+    6: {"band": "5-6", "diff_min": 1, "diff_max": 3, "p_known_prior": 0.10},
+    7: {"band": "6-7", "diff_min": 2, "diff_max": 5, "p_known_prior": 0.15},
+    8: {"band": "7-8", "diff_min": 3, "diff_max": 7, "p_known_prior": 0.20},
+    9: {"band": "8-9", "diff_min": 4, "diff_max": 10, "p_known_prior": 0.25},
+}
+
+
+def age_band_config(age: int) -> dict:
+    """Return the curriculum band config for a given age (clamps to 5–9)."""
+    return AGE_BANDS.get(max(5, min(9, age)), AGE_BANDS[7])
+
 
 @dataclass
 class BKTSkillState:
@@ -90,6 +104,7 @@ class EloSkillState:
 class LearnerState:
     learner_id: str
     lang: str = "en"
+    age: int = 7
     bkt: Dict[str, BKTSkillState] = field(default_factory=dict)
     elo: Dict[str, EloSkillState] = field(default_factory=dict)
     history: List[Dict] = field(default_factory=list)
@@ -97,13 +112,18 @@ class LearnerState:
     plateau_sessions: Dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self):
+        cfg = age_band_config(self.age)
         for skill in SKILLS:
             if skill not in self.bkt:
-                self.bkt[skill] = BKTSkillState()
+                self.bkt[skill] = BKTSkillState(p_known=cfg["p_known_prior"])
             if skill not in self.elo:
                 self.elo[skill] = EloSkillState()
             if skill not in self.plateau_sessions:
                 self.plateau_sessions[skill] = 0
+
+    @property
+    def age_config(self) -> dict:
+        return age_band_config(self.age)
 
     def record_response(self, item: dict, is_correct: bool) -> None:
         skill = item["skill"]
@@ -131,11 +151,23 @@ class LearnerState:
     def select_next_item(self, items: list, use_bkt: bool = True) -> Optional[dict]:
         """
         Choose the next item targeting the skill with lowest mastery,
-        at a difficulty one step above the learner's current Elo estimate.
+        at a difficulty appropriate for the learner's age group.
         BKT mode: use p_known; Elo mode: use normalised rating.
         """
         if not items:
             return None
+
+        cfg = self.age_config
+        diff_min, diff_max = cfg["diff_min"], cfg["diff_max"]
+
+        # Filter to age-appropriate items first
+        age_items = [
+            it for it in items
+            if diff_min <= it.get("difficulty", 5) <= diff_max
+        ]
+        # Graceful fallback: if age band yields nothing, use all items
+        if not age_items:
+            age_items = items
 
         # Target weakest skill
         if use_bkt:
@@ -143,28 +175,28 @@ class LearnerState:
         else:
             weakest = min(SKILLS, key=lambda s: self.elo[s].mastery)
 
-        # Estimate learner's current difficulty sweet-spot (zone of proximal dev)
+        # Difficulty sweet-spot: ZPD within the age band
         if use_bkt:
             mastery = self.bkt[weakest].mastery
         else:
             mastery = self.elo[weakest].mastery
-        target_diff = max(1, min(10, int(mastery * 10) + 1))
+        raw_target = max(1, min(10, int(mastery * 10) + 1))
+        target_diff = max(diff_min, min(diff_max, raw_target))
 
         candidates = [
-            it for it in items
+            it for it in age_items
             if it["skill"] == weakest
             and abs(it.get("difficulty", 5) - target_diff) <= 2
         ]
         if not candidates:
-            candidates = [it for it in items if it["skill"] == weakest]
+            candidates = [it for it in age_items if it["skill"] == weakest]
         if not candidates:
-            candidates = items
+            candidates = age_items
 
         # Prefer items not yet seen
         seen_ids = {h["item_id"] for h in self.history}
         unseen = [it for it in candidates if it["id"] not in seen_ids]
         pool = unseen if unseen else candidates
-        # Closest difficulty match
         pool.sort(key=lambda x: abs(x.get("difficulty", 5) - target_diff))
         return pool[0]
 
@@ -187,6 +219,7 @@ class LearnerState:
         return {
             "learner_id": self.learner_id,
             "lang": self.lang,
+            "age": self.age,
             "session_count": self.session_count,
             "bkt": {s: vars(self.bkt[s]) for s in SKILLS},
             "elo": {s: {"rating": self.elo[s].rating} for s in SKILLS},
@@ -196,7 +229,7 @@ class LearnerState:
 
     @classmethod
     def from_dict(cls, d: dict) -> "LearnerState":
-        state = cls(learner_id=d["learner_id"], lang=d.get("lang", "en"))
+        state = cls(learner_id=d["learner_id"], lang=d.get("lang", "en"), age=d.get("age", 7))
         state.session_count = d.get("session_count", 0)
         state.history = d.get("history", [])
         state.plateau_sessions = d.get("plateau_sessions", {s: 0 for s in SKILLS})

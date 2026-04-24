@@ -51,14 +51,29 @@ def get_by_id(items: List[Item], item_id: str) -> Optional[Item]:
     return None
 
 
-def sample_diagnostic_probes(items: List[Item], n_per_skill: int = 1) -> List[Item]:
-    """Return one probe per skill, lowest difficulty first."""
+def sample_diagnostic_probes(
+    items: List[Item],
+    n_per_skill: int = 1,
+    diff_min: int = 1,
+    diff_max: int = 10,
+) -> List[Item]:
+    """Return one probe per skill at age-appropriate difficulty, lowest first."""
     probes: List[Item] = []
     for skill in SKILLS:
         candidates = sorted(
-            [it for it in items if it["skill"] == skill],
+            [
+                it for it in items
+                if it["skill"] == skill
+                and diff_min <= it.get("difficulty", 5) <= diff_max
+            ],
             key=lambda x: x.get("difficulty", 5),
         )
+        if not candidates:
+            # fallback: any item for this skill
+            candidates = sorted(
+                [it for it in items if it["skill"] == skill],
+                key=lambda x: x.get("difficulty", 5),
+            )
         probes.extend(candidates[:n_per_skill])
     random.shuffle(probes)
     return probes

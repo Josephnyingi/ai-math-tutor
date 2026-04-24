@@ -9,6 +9,12 @@ data/tts/
 data/synthetic_child_audio/
 figures/*.png
 examples/sample.db
+tutor/adapters/**/checkpoint-*/
+tutor/adapters/**/optimizer.pt
+tutor/adapters/**/rng_state.pth
+tutor/adapters/**/scheduler.pt
+tutor/adapters/**/training_args.bin
+tutor/adapters/merged/
 .env
 *.egg-info/
 dist/

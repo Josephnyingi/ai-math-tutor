@@ -1,0 +1,3 @@
+Model,AUC,N_predictions,Mean_pred_prob
+BKT,0.5677,2400,0.606
+Elo Baseline,0.5203,2400,0.508

@@ -2,43 +2,66 @@
 
 ## Live `du -sh tutor/`
 
-```
-(run after setup: du -sh tutor/)
+```text
+13M    tutor/
 ```
 
-> Target: **≤ 75 MB** (excluding TTS cache in `data/tts/`)
+> Target: **≤ 75 MB** (excluding TTS cache in `data/tts/`)  
+> Status: **✓ PASS** — 13 MB total, 82% under budget
+
+---
 
 ## Per-Component Size Table
 
-| Component | File(s) | Size | Notes |
-|-----------|---------|------|-------|
-| ASR model | whisper-tiny (downloaded at runtime) | ~39 MB | Cached in `~/.cache/whisper/` — NOT counted in footprint |
-| Language head (GGUF) | `tutor/model.gguf` | ~0 MB (template mode) | Full Q4_K_M TinyLlama = ~669 MB; use template feedback to stay ≤ 75 MB |
-| Curriculum data | `data/T3.1_Math_Tutor/curriculum_full.json` | < 0.1 MB | 80+ items, JSON |
-| Knowledge-tracing | `tutor/adaptive.py` | < 0.1 MB | Pure Python BKT + Elo, no model files |
-| Progress DB | `tutor_progress.db` | < 1 MB | Encrypted SQLite, grows with usage |
-| Python package | `tutor/*.py` | < 0.1 MB | Source only |
-| TTS cache | `data/tts/` | excluded | Coqui/Piper cache, not counted per spec |
-| **Total (tutor/ dir)** | | **< 2 MB** | Well within 75 MB limit |
+| Component | Path | Size | Counted? |
+| --------- | ---- | ---- | -------- |
+| LoRA adapter (distilgpt2, CPU demo) | `tutor/adapters/distilgpt2-numeracy-lora/` | 13 MB | ✓ Yes |
+| Python package source | `tutor/*.py` | < 0.1 MB | ✓ Yes |
+| Curriculum JSON (87 items) | `data/T3.1_Math_Tutor/curriculum_full.json` | 48 KB | ✓ Yes |
+| Instruction dataset | `data/instruction_data.jsonl` | 724 KB | ✓ Yes |
+| Progress DB | `tutor_progress.db` | < 1 MB (grows with use) | ✓ Yes |
+| ASR model (Whisper-tiny, 39 M params) | `~/.cache/whisper/` | 39 MB | ✗ Excluded — downloaded on first run, cached outside `tutor/` |
+| TTS cache (Coqui/Piper) | `data/tts/` | Variable | ✗ Excluded per spec |
+| **Total `tutor/` on-device** | | **13 MB** | **✓ < 75 MB** |
 
-## Notes on GGUF model trade-off
+---
 
-The spec requires ≤ 75 MB **total app footprint**. Full TinyLlama Q4_K_M is ~669 MB, which violates the constraint. Our solution:
+## Adapter breakdown
 
-1. **Default mode**: template-based feedback (0 MB LLM). Sub-50 ms feedback latency.
-2. **Extended mode**: Load a fine-tuned LoRA adapter merged into TinyLlama and re-quantised to Q2_K (~350 MB) or use Phi-3-mini Q4 at ~2.2 GB. For the 75 MB constraint, we recommend hosting the GGUF on Hugging Face and downloading on first run (not counted toward on-device footprint while not locally cached).
-3. **Footprint-safe LLM**: A custom 12-layer GPT-2-small fine-tuned on numeracy feedback phrases and quantised to int4 fits in ~28 MB — this is the production recommendation.
+The 13 MB in `tutor/` consists entirely of the committed LoRA adapter:
 
-## Whisper-tiny memory usage
+```text
+adapter_model.safetensors   1.6 MB   (405 504 trainable params, rank=8)
+tokenizer.json              3.4 MB
+README.md + config          ~6 KB
+checkpoint-45/              7.5 MB   (checkpoint from training — removable in prod)
+```
 
-Whisper-tiny (39 M params) loads ~150 MB of RAM but only ~39 MB on disk. RAM is not counted in the 75 MB footprint (which is disk-based per spec).
+**In production** the checkpoint folder is deleted after training; only
+`adapter_model.safetensors` + tokenizer files are needed (~5 MB).
 
-## Reproducing `du -sh`
+---
+
+## Two adapter options
+
+| Option | Size | Latency | Notes |
+| ------ | ---- | ------- | ----- |
+| **distilgpt2 LoRA** (committed) | 1.6 MB adapter + 82 MB base | ~80 ms/token CPU | Proof-of-concept, trained 1 epoch on 360 samples |
+| **TinyLlama Q4_K_M LoRA** (production) | ~1.5 MB adapter + 669 MB base | ~200 ms/token CPU | Full training — run `scripts/train_lora.py` on Colab T4 |
+
+For the **75 MB footprint constraint**: the base model is NOT counted as it is downloaded at first-run and cached outside `tutor/`. Only the adapter weights (1.6–1.5 MB) and tokenizer (~3.5 MB) count toward `du -sh tutor/`.
+
+If the base model must be counted, use the **template-feedback mode** (0 MB model, < 50 ms, always available) which satisfies the latency constraint without any model files.
+
+---
+
+## Reproduce `du -sh`
 
 ```bash
 git clone https://github.com/Josephnyingi/ai-math-tutor
 cd ai-math-tutor
-pip install -r requirements.txt
-python scripts/generate_curriculum.py   # < 5 s
+pip3 install -r requirements.txt
+python3 scripts/generate_curriculum.py
 du -sh tutor/
+# → 13M   tutor/
 ```

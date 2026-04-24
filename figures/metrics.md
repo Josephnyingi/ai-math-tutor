@@ -1,8 +1,8 @@
 # AI Math Tutor — Reported Metrics
 
-_Machine_: `Linux-6.8.0-106-generic-aarch64-with-glibc2.35`  
-_Python_: `3.10.12`  
-_Generated_: `2026-04-24T12:06:27+00:00`
+_Machine_: `macOS-15.7.4-arm64-arm-64bit-Mach-O`  
+_Python_: `3.13.12`  
+_Generated_: `2026-04-24T13:43:53+00:00`
 
 ## Headline
 
@@ -29,13 +29,13 @@ _Generated_: `2026-04-24T12:06:27+00:00`
 
 | Stage | p50 ms | p95 ms | p99 ms | N |
 |---|---|---|---|---|
-| lang_detect | 0.0028 | 0.0037 | 0.0045 | 2000 |
-| bkt_update | 0.0003 | 0.0004 | 0.0004 | 2000 |
-| adaptive_select | 0.0043 | 0.0048 | 0.0062 | 200 |
-| visual_grounding (render) | 0.0278 | 0.0519 | 15.7691 | 50 |
-| visual_grounding (blob count) | 2.45 | 4.0799 | 4.4522 | 50 |
-| template_feedback | 0.0006 | 0.0008 | 0.0011 | 200 |
-| end_to_end_scoring | 0.0049 | 0.0058 | 0.0119 | 200 |
+| lang_detect | 0.0025 | 0.0035 | 0.0052 | 2000 |
+| bkt_update | 0.0003 | 0.0003 | 0.0004 | 2000 |
+| adaptive_select | 0.004 | 0.0042 | 0.0055 | 200 |
+| visual_grounding (render) | 0.0256 | 0.0769 | 378.2503 | 50 |
+| visual_grounding (blob count) | 2.1127 | 3.9477 | 8.2672 | 50 |
+| template_feedback | 0.0005 | 0.0007 | 0.0015 | 200 |
+| end_to_end_scoring | 0.004 | 0.0048 | 0.0094 | 200 |
 
 ## BKT per-skill breakdown
 

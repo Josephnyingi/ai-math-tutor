@@ -1,85 +1,85 @@
 {
   "environment": {
-    "python": "3.10.12",
-    "platform": "Linux-6.8.0-106-generic-aarch64-with-glibc2.35",
-    "processor": "aarch64",
-    "timestamp": "2026-04-24T12:06:27+00:00"
+    "python": "3.13.12",
+    "platform": "macOS-15.7.4-arm64-arm-64bit-Mach-O",
+    "processor": "arm",
+    "timestamp": "2026-04-24T13:43:53+00:00"
   },
   "sub_eval_runs": [
     {
       "script": "eval_bkt.py",
       "returncode": 0,
-      "elapsed_s": 39.69
+      "elapsed_s": 49.8
     },
     {
       "script": "eval_asr.py",
       "returncode": 0,
-      "elapsed_s": 0.62
+      "elapsed_s": 0.33
     },
     {
       "script": "eval_feedback.py",
       "returncode": 0,
-      "elapsed_s": 0.61
+      "elapsed_s": 0.29
     }
   ],
   "latency_ms": {
     "lang_detect": {
       "n": 2000,
-      "mean_ms": 0.0029,
-      "p50_ms": 0.0028,
-      "p95_ms": 0.0037,
-      "p99_ms": 0.0045,
-      "max_ms": 0.1717
+      "mean_ms": 0.0027,
+      "p50_ms": 0.0025,
+      "p95_ms": 0.0035,
+      "p99_ms": 0.0052,
+      "max_ms": 0.0925
     },
     "bkt_update": {
       "n": 2000,
       "mean_ms": 0.0003,
       "p50_ms": 0.0003,
-      "p95_ms": 0.0004,
+      "p95_ms": 0.0003,
       "p99_ms": 0.0004,
-      "max_ms": 0.004
+      "max_ms": 0.0025
     },
     "adaptive_select": {
       "n": 200,
-      "mean_ms": 0.0045,
-      "p50_ms": 0.0043,
-      "p95_ms": 0.0048,
-      "p99_ms": 0.0062,
-      "max_ms": 0.015
+      "mean_ms": 0.004,
+      "p50_ms": 0.004,
+      "p95_ms": 0.0042,
+      "p99_ms": 0.0055,
+      "max_ms": 0.0102
     },
     "visual_grounding": {
       "render": {
         "n": 50,
-        "mean_ms": 0.6468,
-        "p50_ms": 0.0278,
-        "p95_ms": 0.0519,
-        "p99_ms": 15.7691,
-        "max_ms": 30.8608
+        "mean_ms": 14.8613,
+        "p50_ms": 0.0256,
+        "p95_ms": 0.0769,
+        "p99_ms": 378.2503,
+        "max_ms": 741.5134
       },
       "blob_count": {
         "n": 50,
-        "mean_ms": 2.6253,
-        "p50_ms": 2.45,
-        "p95_ms": 4.0799,
-        "p99_ms": 4.4522,
-        "max_ms": 4.8076
+        "mean_ms": 2.5118,
+        "p50_ms": 2.1127,
+        "p95_ms": 3.9477,
+        "p99_ms": 8.2672,
+        "max_ms": 11.7895
       }
     },
     "template_feedback": {
       "n": 200,
-      "mean_ms": 0.0006,
-      "p50_ms": 0.0006,
-      "p95_ms": 0.0008,
-      "p99_ms": 0.0011,
-      "max_ms": 0.0087
+      "mean_ms": 0.0005,
+      "p50_ms": 0.0005,
+      "p95_ms": 0.0007,
+      "p99_ms": 0.0015,
+      "max_ms": 0.0065
     },
     "end_to_end_scoring": {
       "n": 200,
-      "mean_ms": 0.0056,
-      "p50_ms": 0.0049,
-      "p95_ms": 0.0058,
-      "p99_ms": 0.0119,
-      "max_ms": 0.1238
+      "mean_ms": 0.0046,
+      "p50_ms": 0.004,
+      "p95_ms": 0.0048,
+      "p99_ms": 0.0094,
+      "max_ms": 0.0903
     }
   },
   "bkt": {
@@ -629,7 +629,7 @@
         "p95": 0.0,
         "p99": 0.0,
         "mean": 0.0,
-        "max": 0.0
+        "max": 0.01
       },
       "per_condition": {
         "en_correct": {

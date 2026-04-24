@@ -325,46 +325,81 @@ python3 parent_report.py amani --format text
 
 ## Next Steps
 
-### 1 · Real Child Interaction Data (highest impact)
+The five steps below form a concrete post-hackathon roadmap. Each is designed to directly increase the real-world impact of the system on children's numeracy outcomes in Rwanda and similar contexts.
 
-The current model is fine-tuned on 2,000 **synthetic** instruction pairs. The app already logs every prompt → child response → feedback triple to encrypted SQLite (`progress_store.log_interaction()`). After deployment, this data can be pseudonymised and exported for a second fine-tuning round:
+---
+
+### 1 · Real Child Interaction Data — Improve Model Performance and Relevance
+
+**Goal**: Replace synthetic training data with authentic child–tutor exchanges so the model learns from how real children in Rwanda actually speak, make mistakes, and respond to feedback.
+
+**Why it matters**: A model trained on synthetic data has never seen a 6-year-old say *"gatanu… nope… cinq"* mid-sentence, or answer with long silence followed by a whispered number. These patterns — genuine error types, code-switching rhythms, hesitation and self-correction — are invisible in synthetic data but define the real challenge. Training on even 200 real interactions measurably reduces feedback mismatches and improves the child's experience.
+
+**How**: The app already logs every exchange to encrypted on-device SQLite. After a deployment period, one command exports pseudonymised records ready for retraining:
 
 ```python
 store = ProgressStore("tutor_progress.db")
 n = store.export_interactions_for_finetuning("data/real_interactions.jsonl")
-# → n records exported, learner IDs hashed, all fields decrypted locally
-modal run scripts/train_modal.py   # retrain on real data
+# → n records exported, learner IDs hashed, content decrypted locally only
+modal run scripts/train_modal.py   # retrain on real data, ~$1 on Modal GPU
 ```
 
-Even **200 real child interactions** would meaningfully outperform 2,000 synthetic ones because real data captures genuine error patterns, code-switching frequency, and the hesitation/silence distribution of 5–9 year olds.
+**Impact**: Each retraining cycle closes the gap between what the model was built for and what children actually need — creating a self-improving loop that gets better the more it is used.
 
-### 2 · School Pilot — AIMS-Connected Partner (post-hackathon)
+---
 
-Approach one AIMS-connected primary school in Rwanda for a **2-week classroom pilot** with a P1–P3 class (~30 children). This turns the proof-of-concept into a publishable system and provides:
+### 2 · School Pilot with an AIMS-Connected Partner — Validate Real Learning Gains
 
-- Real interaction data for model improvement (see above)
-- Ground-truth BKT calibration against actual learning gains
-- Qualitative feedback from teachers on the parent report format
-- Evidence base for a grant application or journal submission
+**Goal**: Deploy the app in one P1–P3 classroom in Rwanda for two weeks, measure actual learning gains, and collect the first real-world evidence that the system improves numeracy outcomes.
 
-**What is needed**: one pre-loaded tablet · one-page Kinyarwanda consent form · AIMS ethics clearance (standard form). Estimated cost: **$0** beyond existing hardware.
+**Why it matters**: A working demo proves technical feasibility. A school pilot proves educational impact — the difference between a hackathon project and a publishable, fundable intervention. Two weeks with 30 children generates:
 
-### 3 · GGUF Quantisation for Smallest Devices
+- **Real interaction data** for Step 1 above
+- **Learning gain evidence**: pre/post skill assessments compared against the BKT mastery trajectory recorded by the app
+- **Teacher usability feedback** on the parent report and classroom integration
+- **An evidence base** for a research paper, an AIMS grant application, or a pitch to EdTech funders (e.g. USAID, Gates Foundation Digital Literacy programmes)
 
-Merge the TinyLlama adapter and quantise to Q4_K_M GGUF for devices with < 1 GB RAM:
+**What is needed**: one pre-loaded Android tablet · a one-page parent consent form in Kinyarwanda · standard AIMS ethics clearance. Estimated cost: **$0** beyond existing hardware.
+
+**This step turns the proof-of-concept into a publishable system and gives the project a credible story for funders and policymakers.**
+
+---
+
+### 3 · GGUF Quantisation — Reach the Lowest-Cost Devices
+
+**Goal**: Compress the TinyLlama adapter into a single quantised GGUF file so the full AI tutor runs on tablets with less than 1 GB RAM and no internet connection — the hardware reality of most community centres in rural Rwanda.
+
+**Why it matters**: The 75 MB footprint target exists precisely because cheap Android tablets (< $50) are the most common shared device in Rwandan primary schools. A smaller, faster model means more children can access the tutor without requiring hardware upgrades, reducing the cost of deployment from hundreds of dollars per classroom to near zero.
 
 ```bash
 python3 scripts/train_lora.py --merge-only
-git clone https://github.com/ggerganov/llama.cpp --depth 1
 python3 llama.cpp/convert_hf_to_gguf.py tutor/adapters/merged/ \
     --outtype q4_k_m --outfile tutor/model.gguf
-# Target: < 75 MB GGUF file
+# Target: < 75 MB · runs on CPU only · no internet required
 ```
 
-### 4 · Kinyarwanda ASR Fine-Tuning
+**Impact**: Expands the addressable population from schools with reasonable hardware to every community centre and home with any Android device.
 
-Whisper-tiny was not trained on Kinyarwanda. Fine-tune on the [Mozilla Common Voice KIN dataset](https://commonvoice.mozilla.org/rw/datasets) (currently ~10 h) to reduce word-error rate from ~40% to ~15% on children's speech.
+---
 
-### 5 · Teacher Dashboard
+### 4 · Kinyarwanda ASR Fine-Tuning — Understand Every Child's Voice
 
-Extend `parent_report.py` to a web dashboard that aggregates anonymised class-level BKT mastery per skill — allowing teachers to identify which skill the whole class is struggling with before the next lesson.
+**Goal**: Fine-tune the speech recognition model on Kinyarwanda children's speech to cut word-error rate from ~40% (Whisper-tiny out-of-the-box) to under 15%, so the tutor correctly hears children regardless of accent, pitch, or pronunciation variation.
+
+**Why it matters**: If the tutor mishears *"indwi"* (seven) as *"indiri"*, it marks a correct answer wrong, discourages the child, and corrupts the BKT mastery estimate. ASR errors are the single largest source of false-negative feedback in the current system. A KIN-fine-tuned model also removes the need for the pitch-normalisation workaround, improving latency.
+
+**How**: Fine-tune Whisper-small on the [Mozilla Common Voice Kinyarwanda dataset](https://commonvoice.mozilla.org/rw/datasets) (~10 hours of adult speech) augmented with the pitch-shifted child audio pipeline already in `scripts/make_synthetic_child.py`. Estimated training cost: < $5 on Modal GPU.
+
+**Impact**: Unlocks reliable voice interaction for children who cannot yet read — the most critical user group for early numeracy support.
+
+---
+
+### 5 · Teacher Dashboard — Scale Impact Across Classrooms
+
+**Goal**: Extend the parent report into a web dashboard that shows teachers the class-level BKT mastery distribution per skill, so they can identify which concept the whole class is struggling with before planning the next lesson.
+
+**Why it matters**: Individual adaptive tutoring helps one child at a time. A teacher who sees that 18 out of 30 students have BKT mastery below 0.4 on subtraction can restructure the following lesson — multiplying the impact of the AI system across the whole classroom without requiring every child to have individual device access.
+
+**Privacy**: The dashboard aggregates only anonymised, differentially private skill averages — the same DP mechanism already implemented in `progress_store.dp_sync_payload()`. No individual child's data is exposed.
+
+**Impact**: Bridges the gap between individual AI tutoring and classroom instruction, giving teachers an evidence-based tool that works even when device access is limited to one tablet shared across 30 students.

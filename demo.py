@@ -275,6 +275,40 @@ def build_ui():
             Akanyamaswa k'Imibare &nbsp;·&nbsp; Aventure Maths &nbsp;·&nbsp; Hisabu ya Kusisimua
           </p>
         </div>
+
+        <!-- For Parents & Teachers collapsible panel -->
+        <details style="margin-bottom:14px; border:2px solid #d1d5db; border-radius:14px;
+                        background:#f9fafb; padding:0; overflow:hidden">
+          <summary style="cursor:pointer; padding:12px 18px; font-weight:800; font-size:1em;
+                          color:#374151; list-style:none; display:flex; align-items:center; gap:8px;
+                          user-select:none">
+            👨‍👩‍👧 <span>For Parents &amp; Teachers</span>
+            <span style="margin-left:auto; font-size:0.8em; color:#6b7280">tap to expand</span>
+          </summary>
+          <div style="padding:14px 18px 16px; border-top:1px solid #e5e7eb; font-size:0.95em; color:#374151; line-height:1.7">
+            <p style="margin:0 0 10px"><strong>How to set up a session:</strong></p>
+            <ol style="margin:0 0 12px; padding-left:20px">
+              <li>Enter the child's <strong>name</strong> so progress is saved across sessions.</li>
+              <li>Select their <strong>age (5–9)</strong> — this sets the difficulty level automatically. Younger children see easier questions; older children get harder ones.</li>
+              <li>Pick the <strong>language</strong> the child is most comfortable with.</li>
+              <li>Press <strong>START</strong> and hand the device to the child.</li>
+            </ol>
+            <p style="margin:0 0 10px"><strong>How the child answers:</strong></p>
+            <ul style="margin:0 0 12px; padding-left:20px">
+              <li>👇 <strong>Tap a coloured number button</strong> — no reading or typing needed.</li>
+              <li>🎤 Or <strong>speak the answer</strong> into the microphone (optional).</li>
+              <li>⭐ Stars fill up as the child gets answers right.</li>
+            </ul>
+            <p style="margin:0 0 6px"><strong>Viewing the child's progress report:</strong></p>
+            <code style="background:#e5e7eb; padding:4px 8px; border-radius:6px; font-size:0.9em">
+              python3 parent_report.py &lt;name&gt; --lang kin
+            </code>
+            <p style="margin:8px 0 0; color:#6b7280; font-size:0.88em">
+              Generates a one-page visual report (colour bars, skill badges, trend arrows)
+              designed for non-literate parents — no numbers, just icons and colours.
+            </p>
+          </div>
+        </details>
         """)
 
         with gr.Row(equal_height=False):

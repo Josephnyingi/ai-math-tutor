@@ -185,8 +185,14 @@ def t_render_shape():
     assert img.shape == (128, 128, 3)
     assert img.dtype == np.uint8
 
+def t_render_zero():
+    from tutor.visual_grounding import render_counting_stimulus
+    img = render_counting_stimulus(0)  # must not ZeroDivisionError
+    assert img is not None
+
 test("blob counter accuracy n=1–10", t_blob_count)
 test("rendered stimulus shape & dtype", t_render_shape)
+test("render_counting_stimulus(0) does not crash", t_render_zero)
 
 
 # ------------------------------------------------------------------
@@ -272,5 +278,5 @@ if errors:
         print(f"\n--- {name} ---\n{tb}")
     sys.exit(1)
 else:
-    total = 18
+    total = 19
     print(f"\033[92mAll tests passed ({total}/{total}) ✓\033[0m")

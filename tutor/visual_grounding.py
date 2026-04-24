@@ -152,6 +152,8 @@ def render_counting_stimulus(
         img = PILImage.new("RGB", (grid_size, grid_size), (255, 255, 255))
         draw = ImageDraw.Draw(img)
         margin = 10
+        if n == 0:
+            return np.ones((grid_size, grid_size, 3), dtype=np.uint8) * 255
         cols = min(n, 5)
         rows = (n + cols - 1) // cols
         cell_w = (grid_size - 2 * margin) // max(cols, 1)

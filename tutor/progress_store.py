@@ -19,6 +19,8 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import numpy as np
+
 # ------------------------------------------------------------------
 # Encryption helpers
 # ------------------------------------------------------------------
@@ -260,8 +262,6 @@ class ProgressStore:
             vals = skill_acc[s]
             if vals:
                 mean = sum(vals) / len(vals)
-                noise = float(os.urandom(4).__len__())  # placeholder; use numpy below
-                import numpy as np
                 noise = float(np.random.normal(0, sigma))
                 noisy[s] = float(np.clip(mean + noise, 0.0, 1.0))
             else:

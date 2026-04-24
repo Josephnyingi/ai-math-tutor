@@ -3,7 +3,7 @@ Child-speech ASR adapter built on openai/whisper-tiny.
 
 Adaptations for child voices:
   - Pitch-shift augmentation at inference (+3 to +6 semitones downward normalisation)
-  - Language-aware decoding (EN / FR / KIN)
+  - Language-aware decoding (EN / FR / KIN / SW)
   - Number-word post-processing to extract integer answers
   - Silence / timeout detection
 """
@@ -49,7 +49,12 @@ _NUM_KIN = {
     "gatanu": 5, "gatandatu": 6, "indwi": 7, "umunani": 8,
     "icyenda": 9, "icumi": 10, "esheshatu": 6,  # common child variant
 }
-_ALL_NUMS = {**_NUM_EN, **_NUM_FR, **_NUM_KIN}
+_NUM_SW = {
+    "sifuri": 0, "moja": 1, "mbili": 2, "tatu": 3, "nne": 4,
+    "tano": 5, "sita": 6, "saba": 7, "nane": 8, "tisa": 9,
+    "kumi": 10, "ishirini": 20, "thelathini": 30,
+}
+_ALL_NUMS = {**_NUM_EN, **_NUM_FR, **_NUM_KIN, **_NUM_SW}
 
 
 def _pitch_normalise(audio: np.ndarray, semitones: float = -4.5) -> np.ndarray:
@@ -93,7 +98,7 @@ def transcribe(
         audio = _pitch_normalise(audio, semitones=-4.5)
 
     # Map our lang codes to Whisper language codes
-    lang_map = {"en": "en", "fr": "fr", "kin": "rw", "mix": None}
+    lang_map = {"en": "en", "fr": "fr", "kin": "rw", "sw": "sw", "mix": None}
     whisper_lang = lang_map.get(lang_hint)
 
     decode_options = {"language": whisper_lang, "fp16": False, "task": "transcribe"}

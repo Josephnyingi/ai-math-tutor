@@ -197,6 +197,7 @@ def _silence_prompt(lang: str) -> str:
         "en": "I didn't hear you. Try again! Tap the number or speak.",
         "fr": "Je ne t'ai pas entendu. Essaie encore !",
         "kin": "Sinumvise. Ongera ugerageze!",
+        "sw": "Sikukusikia. Jaribu tena! Gonga nambari au sema.",
     }
     return msgs.get(lang, msgs["en"])
 
@@ -231,9 +232,9 @@ def build_ui():
                     max_lines=1,
                 )
                 lang_radio = gr.Radio(
-                    choices=[("Kinyarwanda", "kin"), ("Français", "fr"), ("English", "en")],
+                    choices=[("Kinyarwanda", "kin"), ("Kiswahili", "sw"), ("Français", "fr"), ("English", "en")],
                     value="kin",
-                    label="Language / Langue / Ururimi",
+                    label="Language / Lugha / Langue / Ururimi",
                 )
                 start_btn = gr.Button("▶  START / TANGIRA", variant="primary", size="lg")
 

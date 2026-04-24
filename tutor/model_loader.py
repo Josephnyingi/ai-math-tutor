@@ -34,6 +34,11 @@ SYSTEM_PROMPT = {
         "Tanga igisubizo gito kandi cyiza (inyandiko ≤ 2). "
         "Koresha amagambo yoroheje."
     ),
+    "sw": (
+        "Wewe ni mwalimu wa hisabu wa kirafiki kwa watoto wenye umri wa miaka 5-9. "
+        "Toa maoni mafupi na ya joto (≤ sentensi 2). "
+        "Tumia maneno rahisi. Usiandike markdown."
+    ),
 }
 
 
@@ -81,6 +86,11 @@ _CORRECT_TEMPLATES = {
         "Yego! Wabikoze neza!",
         "Ni {answer}! Wabikoze neza cyane!",
     ],
+    "sw": [
+        "Hongera! Hiyo ndiyo jibu sahihi! 🎉",
+        "Vizuri sana! Umefaulu!",
+        "Ndiyo! {answer} ni sahihi! Umefanya vizuri!",
+    ],
 }
 _WRONG_TEMPLATES = {
     "en": [
@@ -98,13 +108,18 @@ _WRONG_TEMPLATES = {
         "Hafi! Ni {answer}. Uzagera!",
         "Si byo — igisubizo ni {answer}. Komeza!",
     ],
+    "sw": [
+        "Jaribu tena! Jibu ni {answer}. Endelea!",
+        "Karibu! Ni {answer}. Utafaulu wakati ujao!",
+        "Sivyo — jibu ni {answer}. Jaribu tena!",
+    ],
 }
 
 import random as _random
 
 
 def _template_feedback(is_correct: bool, answer: int, lang: str) -> str:
-    lang = lang if lang in ("en", "fr", "kin") else "en"
+    lang = lang if lang in ("en", "fr", "kin", "sw") else "en"
     pool = _CORRECT_TEMPLATES[lang] if is_correct else _WRONG_TEMPLATES[lang]
     return _random.choice(pool).format(answer=answer)
 
@@ -136,7 +151,7 @@ def generate_feedback(
     verdict = "correct" if is_correct else f"incorrect (correct answer is {answer})"
     user_msg = (
         f"The child said: '{child_response}'. Their answer was {verdict}. "
-        f"Give feedback in {'English' if lang=='en' else 'French' if lang=='fr' else 'Kinyarwanda'}."
+        f"Give feedback in {'English' if lang=='en' else 'French' if lang=='fr' else 'Swahili' if lang=='sw' else 'Kinyarwanda'}."
     )
 
     try:

@@ -1,8 +1,8 @@
 """
-Lightweight language detection for child responses (KIN / FR / EN / mix).
+Lightweight language detection for child responses (KIN / FR / EN / SW / mix).
 
 Strategy:
-  1. Word-level lookup against EN / FR / KIN number-word + common-word lexicons.
+  1. Word-level lookup against EN / FR / KIN / SW number-word + common-word lexicons.
   2. If no words match, fall back to character n-gram scoring.
   3. 'mix' is returned when the top-two languages both contribute ≥ 15 % of tokens.
 
@@ -37,13 +37,20 @@ _LEX_KIN = {
     "mirongo", "esheshatu", "twewenti", "angahe", "nka", "ni", "na",
     "yego", "oya", "soma", "bara", "ibara",
 }
+_LEX_SW = {
+    "sifuri", "moja", "mbili", "tatu", "nne", "tano", "sita", "saba",
+    "nane", "tisa", "kumi", "ishirini", "thelathini", "arobaini",
+    "hamsini", "ngapi", "jumlisha", "toa", "punguza", "sawa", "ndiyo",
+    "hapana", "na", "ni", "jibu", "hesabu", "namba",
+}
 
-_LEXICONS: Dict[str, set] = {"en": _LEX_EN, "fr": _LEX_FR, "kin": _LEX_KIN}
+_LEXICONS: Dict[str, set] = {"en": _LEX_EN, "fr": _LEX_FR, "kin": _LEX_KIN, "sw": _LEX_SW}
 
 # Character n-gram profiles (trigram sets common per language)
 _NGRAM_EN = {"the", "ing", "ion", "and", "ent", "hat", "tha"}
 _NGRAM_FR = {"ent", "les", "des", "une", "ous", "est", "que"}
 _NGRAM_KIN = {"nyi", "mwe", "abi", "and", "umi", "iku", "gat"}
+_NGRAM_SW = {"aku", "ana", "kwa", "una", "ndi", "ume", "ote"}
 
 
 def _tokenise(text: str) -> list[str]:
@@ -52,7 +59,7 @@ def _tokenise(text: str) -> list[str]:
 
 
 def _score_lexicon(tokens: list[str]) -> Dict[str, float]:
-    scores: Dict[str, float] = {"en": 0, "fr": 0, "kin": 0}
+    scores: Dict[str, float] = {"en": 0, "fr": 0, "kin": 0, "sw": 0}
     n = max(len(tokens), 1)
     for tok in tokens:
         for lang, lex in _LEXICONS.items():
@@ -65,7 +72,7 @@ def _score_ngrams(text: str) -> Dict[str, float]:
     text = text.lower()
     total = max(len(text) - 2, 1)
     trigrams = {text[i: i + 3] for i in range(len(text) - 2)}
-    profiles = {"en": _NGRAM_EN, "fr": _NGRAM_FR, "kin": _NGRAM_KIN}
+    profiles = {"en": _NGRAM_EN, "fr": _NGRAM_FR, "kin": _NGRAM_KIN, "sw": _NGRAM_SW}
     return {lang: len(trigrams & prof) / total for lang, prof in profiles.items()}
 
 
@@ -87,7 +94,7 @@ def detect(text: str) -> Tuple[str, Dict[str, float]]:
     # Combine: lexicon is more reliable, n-gram is tie-breaker
     combined = {
         lang: 0.7 * lex_scores[lang] + 0.3 * ngram_scores[lang]
-        for lang in ("en", "fr", "kin")
+        for lang in ("en", "fr", "kin", "sw")
     }
 
     total = sum(combined.values()) or 1.0
@@ -110,7 +117,7 @@ def reply_lang(detected: str, fallback: str = "en") -> str:
     Resolve which language to reply in.
     For 'mix', return the single highest-scoring language.
     """
-    if detected in ("en", "fr", "kin"):
+    if detected in ("en", "fr", "kin", "sw"):
         return detected
     return fallback
 
@@ -132,6 +139,10 @@ def extract_number_words(text: str, lang: str) -> list[str]:
         "zeru", "rimwe", "kabiri", "gatatu", "kane", "gatanu", "gatandatu",
         "indwi", "umunani", "icyenda", "icumi",
     }
-    mapping = {"en": num_words_en, "fr": num_words_fr, "kin": num_words_kin}
+    num_words_sw = {
+        "sifuri", "moja", "mbili", "tatu", "nne", "tano", "sita", "saba",
+        "nane", "tisa", "kumi", "ishirini",
+    }
+    mapping = {"en": num_words_en, "fr": num_words_fr, "kin": num_words_kin, "sw": num_words_sw}
     pool = mapping.get(lang, set())
     return [t for t in tokens if t in pool]

@@ -76,9 +76,6 @@ VOLUME_MOUNT = Path("/results")
     gpu="T4",
     timeout=3600,        # 1 hour max
     volumes={VOLUME_MOUNT: volume},
-    secrets=[
-        modal.Secret.from_name("huggingface-token", required=False),
-    ],
 )
 def train_tinyllama(
     instruction_data: bytes,
@@ -86,6 +83,7 @@ def train_tinyllama(
     batch_size: int = 4,
     hf_repo: str = "Josephnyingi/math-tutor-tinyllama-lora",
     push_to_hub: bool = False,
+    hf_token: str = "",
 ):
     import json, random
     import torch
@@ -195,7 +193,6 @@ def train_tinyllama(
     print(f"\nAdapter saved → {OUTPUT_DIR} ({adapter_size:.1f} MB)")
 
     # Optional HF push
-    hf_token = os.environ.get("HF_TOKEN")
     if push_to_hub and hf_token:
         from huggingface_hub import HfApi
         from peft import PeftModel
@@ -236,6 +233,7 @@ def main(
         epochs=epochs,
         push_to_hub=push and bool(hf_token),
         hf_repo="Josephnyingi/math-tutor-tinyllama-lora",
+        hf_token=hf_token,
     )
 
     # Save adapter locally

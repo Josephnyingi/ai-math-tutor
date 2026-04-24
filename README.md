@@ -611,7 +611,7 @@ better is **runway**. Three months of funded time closes that gap and
 produces the evidence base that unlocks the next round of funding.
 
 > Interested in funding or partnering?
-> [joseph@dtsolutions.io](mailto:joseph@dtsolutions.io) · [github.com/Josephnyingi/ai-math-tutor](https://github.com/Josephnyingi/ai-math-tutor)
+> [josenyingi@gmail.com](mailto:josenyingi@gmail.com) · [github.com/Josephnyingi/ai-math-tutor](https://github.com/Josephnyingi/ai-math-tutor)
 
 ---
 

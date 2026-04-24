@@ -2,7 +2,7 @@
 
 **Candidate:** Joseph Nyingi  
 **Date:** 2026-04-24  
-**Total time:** ~4 hours  
+**Total time:** ~7 hours (initial build 4 h + post-build hardening 3 h)
 
 ---
 
@@ -46,6 +46,37 @@
 - Pushed all code to GitHub.
 - **Tool used:** Claude Code for notebook cell structuring.
 
+### Hour 5 (4:00–5:00) — Audit, Bug Fixes, Real Notebook Execution
+
+- Full technical audit against 5/5 rubric; identified three gaps: fabricated AUC numbers in README, no real adapter weights committed, notebook not executed.
+- Fixed `visual_grounding.py` blob counter binary inversion bug (`gray > thresh` → `gray < thresh`): BlobCounter now 100% accurate for n=1–10.
+- Fixed `progress_store.py` dead code: removed `os.urandom(4).__len__()` (always returned 4), moved `import numpy as np` to module level.
+- Fixed BKT smoke test: corrected wrong assertion (BKT always applies learning transition after wrong answers — mastery never decreases below initial).
+- Fixed `render_counting_stimulus(0)` ZeroDivisionError: added early return for n=0, added regression test.
+- Executed `notebooks/kt_eval.ipynb` with real kernel: BKT AUC = **0.5677**, Elo AUC = **0.5203** — replaced fabricated ~0.72 in README with real numbers and explanation.
+- Updated README AUC table and added calibration curve explanation.
+- **Tool used:** Claude Code for audit cross-referencing and nbformat execution.
+
+### Hour 6 (5:00–6:00) — LoRA Training (CPU + GPU)
+
+- Wrote `scripts/make_instruction_data.py`: generates 2,000 EN/FR/KIN instruction pairs (10 correct + 10 wrong templates per language × skill variations).
+- Wrote `scripts/train_lora_mini.py`: distilgpt2 QLoRA proof-of-concept, runs on CPU in ~17 s. Fixed `rename_column` error and removed invalid `no_cuda`/`use_cpu` TrainingArguments.
+- Ran `train_lora_mini.py` locally: committed real adapter weights to `tutor/adapters/distilgpt2-numeracy-lora/` — 405,504 trainable params, eval_loss = 5.576, 1.6 MB safetensors.
+- Wrote `scripts/train_modal.py`: Modal.com T4 GPU training from VSCode terminal, no Colab required. Fixed three successive errors: `required=` kwarg not supported in older Modal, missing `rich` module, `eval_strategy` renamed to `evaluation_strategy` in transformers 4.40.
+- Ran full production training on Modal Tesla T4 (15.6 GB VRAM): **3 epochs, train_loss = 0.4768, 793 s**. Downloaded adapter (8.6 MB) to `tutor/adapters/tinyllama-numeracy-lora/`.
+- Updated `footprint_report.md`: live `du -sh tutor/` = 24 MB (✓ < 75 MB).
+- **Tool used:** Claude Code for Modal API and PEFT version compatibility fixes.
+
+### Hour 7 (6:00–7:00) — HuggingFace Publish, Interaction Logging, Roadmap
+
+- Pulled tokenizer and config files from Modal volume (`modal volume get`) to complete the adapter directory.
+- Pushed production TinyLlama adapter to HuggingFace Hub at `Nyingi101/math-tutor-tinyllama-lora` using write-scoped token.
+- Created and pushed HuggingFace model card (README.md on the Hub) with YAML metadata (language tags en/fr/rw, license apache-2.0, base_model, pipeline_tag, training loss metric), usage examples in all three languages, LoRA config, training stats, and link back to GitHub repo.
+- Added `log_interaction()` and `export_interactions_for_finetuning()` to `progress_store.py`: every prompt → child response → AI feedback triple is now stored AES-256-GCM encrypted on-device; one command exports pseudonymised JSONL for next training round.
+- Added new `interactions` SQLite table to schema.
+- Expanded README Next Steps section: 5 initiatives with Goal, Why It Matters, How, and Impact written for pitch deck use — school pilot, real data pipeline, GGUF quantisation, KIN ASR fine-tuning, teacher dashboard.
+- **Tool used:** Claude Code for HuggingFace Hub API and SQLite schema extension.
+
 ---
 
 ## LLM & Tool Use Declaration
@@ -64,6 +95,12 @@
 
 **Prompt 3 (Gradio state):**
 > "In Gradio 4.x, how do I share mutable session state across multiple button click handlers without using global variables? Show me a pattern using gr.State() with a dict."
+
+**Prompt 4 (Modal GPU training):**
+> "I need to run TinyLlama QLoRA fine-tuning from my VSCode terminal without Colab. Write a Modal.com script that provisions a T4 GPU, uploads my instruction_data.jsonl, trains with 4-bit NF4 quantisation and LoRA rank=8, and downloads the adapter back locally. Keep it under $1 using Modal's free tier."
+
+**Prompt 5 (real interaction data pipeline):**
+> "The model was trained on synthetic data. Design a SQLite schema and two methods — one to log encrypted prompt/response/feedback triples on-device, one to export pseudonymised JSONL for retraining — that plug into the existing ProgressStore class without breaking the current API."
 
 ### One Prompt Discarded and Why
 
@@ -84,3 +121,33 @@ The spec asks for QLoRA fine-tuning + int4 quantisation of TinyLlama or Phi-3-mi
 3. **Template feedback + documented GGUF upgrade path** — ship with 0 MB LLM, template responses, and a clear `model_loader.py` that hot-loads the GGUF from Hugging Face on first run. The *on-device* footprint stays ≤ 75 MB (model is not cached locally until first run, matching the spec's "total app footprint" framing). Document the full LoRA training recipe in the README.
 
 I chose option 3. It is honest about the constraint, keeps latency well under 2.5 s, and demonstrates I understand the deployment reality (bandwidth-constrained first run vs. subsequent cached runs). The LoRA training recipe is fully documented even if the merged model is too large to bundle.
+
+---
+
+## Second Hard Decision — GPU Training Without Colab
+
+The production LoRA spec requires TinyLlama fine-tuning on a GPU. The only option available during the build was Google Colab, which requires switching browser tabs, managing sessions, and re-uploading data on disconnect — not reproducible from the repo alone.
+
+Instead I wrote `scripts/train_modal.py` using Modal.com serverless GPU. This was harder than it sounds: three successive API compatibility errors had to be debugged remotely (Modal `required=` kwarg, missing `rich` module in the container, `eval_strategy` renamed in transformers 4.40). Each required understanding the dependency pinning inside the Modal container image, not just the local environment.
+
+The result is that **any judge or user can reproduce the full production training with two commands** (`modal token new` + `modal run scripts/train_modal.py`) at a cost of ~$0.88 — without Colab, without leaving the terminal, and with the adapter downloaded automatically to the correct local path. That reproducibility was worth the extra debugging time.
+
+---
+
+## Key Metrics Summary
+
+| Metric | Value |
+| ------ | ----- |
+| Smoke tests passing | 19 / 19 ✓ |
+| BKT AUC (200 learners × 40 responses) | 0.5677 |
+| Elo AUC baseline | 0.5203 |
+| BKT vs Elo delta | +0.0474 |
+| Instruction pairs (EN/FR/KIN) | 2,000 |
+| CPU adapter (distilgpt2) — trainable params | 405,504 (0.49%) |
+| CPU adapter training time | ~17 s on CPU |
+| Production adapter (TinyLlama) — trainable params | 2,252,800 (0.20%) |
+| Production training time | 793 s on Tesla T4 |
+| Production train loss | 0.4768 (converged) |
+| `tutor/` footprint | 24 MB (target ≤ 75 MB ✓) |
+| Latency (template mode) | < 50 ms |
+| Supported languages | English · French · Kinyarwanda · code-switched |

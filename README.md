@@ -320,3 +320,51 @@ python3 parent_report.py amani --format text
 | Child speaks very quietly | Silence threshold tuned conservatively (0.01 RMS); auto-retry on silence |
 | Intermittent power cuts data | Per-response SQLite commits; full recovery on reboot |
 | Privacy breach (stolen tablet) | AES-256-GCM encryption; data useless without PIN |
+
+---
+
+## Next Steps
+
+### 1 · Real Child Interaction Data (highest impact)
+
+The current model is fine-tuned on 2,000 **synthetic** instruction pairs. The app already logs every prompt → child response → feedback triple to encrypted SQLite (`progress_store.log_interaction()`). After deployment, this data can be pseudonymised and exported for a second fine-tuning round:
+
+```python
+store = ProgressStore("tutor_progress.db")
+n = store.export_interactions_for_finetuning("data/real_interactions.jsonl")
+# → n records exported, learner IDs hashed, all fields decrypted locally
+modal run scripts/train_modal.py   # retrain on real data
+```
+
+Even **200 real child interactions** would meaningfully outperform 2,000 synthetic ones because real data captures genuine error patterns, code-switching frequency, and the hesitation/silence distribution of 5–9 year olds.
+
+### 2 · School Pilot — AIMS-Connected Partner (post-hackathon)
+
+Approach one AIMS-connected primary school in Rwanda for a **2-week classroom pilot** with a P1–P3 class (~30 children). This turns the proof-of-concept into a publishable system and provides:
+
+- Real interaction data for model improvement (see above)
+- Ground-truth BKT calibration against actual learning gains
+- Qualitative feedback from teachers on the parent report format
+- Evidence base for a grant application or journal submission
+
+**What is needed**: one pre-loaded tablet · one-page Kinyarwanda consent form · AIMS ethics clearance (standard form). Estimated cost: **$0** beyond existing hardware.
+
+### 3 · GGUF Quantisation for Smallest Devices
+
+Merge the TinyLlama adapter and quantise to Q4_K_M GGUF for devices with < 1 GB RAM:
+
+```bash
+python3 scripts/train_lora.py --merge-only
+git clone https://github.com/ggerganov/llama.cpp --depth 1
+python3 llama.cpp/convert_hf_to_gguf.py tutor/adapters/merged/ \
+    --outtype q4_k_m --outfile tutor/model.gguf
+# Target: < 75 MB GGUF file
+```
+
+### 4 · Kinyarwanda ASR Fine-Tuning
+
+Whisper-tiny was not trained on Kinyarwanda. Fine-tune on the [Mozilla Common Voice KIN dataset](https://commonvoice.mozilla.org/rw/datasets) (currently ~10 h) to reduce word-error rate from ~40% to ~15% on children's speech.
+
+### 5 · Teacher Dashboard
+
+Extend `parent_report.py` to a web dashboard that aggregates anonymised class-level BKT mastery per skill — allowing teachers to identify which skill the whole class is struggling with before the next lesson.

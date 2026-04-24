@@ -84,6 +84,21 @@ CREATE TABLE IF NOT EXISTS learners (
     display_name TEXT,
     created_at  INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS interactions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    learner_id      TEXT    NOT NULL,
+    session_id      INTEGER NOT NULL,
+    ts              INTEGER NOT NULL,
+    item_id         TEXT    NOT NULL,
+    skill           TEXT    NOT NULL,
+    difficulty      INTEGER NOT NULL,
+    lang            TEXT    NOT NULL,
+    prompt_enc      BLOB    NOT NULL,
+    child_response_enc BLOB NOT NULL,
+    feedback_enc    BLOB    NOT NULL,
+    correct         INTEGER NOT NULL,
+    latency_ms      INTEGER
+);
 """
 
 
@@ -173,6 +188,85 @@ class ProgressStore:
             (learner_id, session_id, int(time.time()), item_id, skill, difficulty, int(correct), latency_ms),
         )
         self._conn.commit()
+
+    def log_interaction(
+        self,
+        learner_id: str,
+        session_id: int,
+        item_id: str,
+        skill: str,
+        difficulty: int,
+        lang: str,
+        prompt_text: str,
+        child_response: str,
+        feedback_given: str,
+        correct: bool,
+        latency_ms: Optional[int] = None,
+    ) -> None:
+        """Log a full prompt→response→feedback triple, encrypted on-device.
+
+        These records are the raw material for future real-data fine-tuning.
+        Nothing leaves the device; use export_interactions_for_finetuning()
+        to produce a pseudonymised JSONL file for training.
+        """
+        self._conn.execute(
+            "INSERT INTO interactions "
+            "(learner_id, session_id, ts, item_id, skill, difficulty, lang, "
+            " prompt_enc, child_response_enc, feedback_enc, correct, latency_ms) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                learner_id,
+                session_id,
+                int(time.time()),
+                item_id,
+                skill,
+                difficulty,
+                lang,
+                _encrypt(prompt_text.encode(), self._key),
+                _encrypt(child_response.encode(), self._key),
+                _encrypt(feedback_given.encode(), self._key),
+                int(correct),
+                latency_ms,
+            ),
+        )
+        self._conn.commit()
+
+    def export_interactions_for_finetuning(self, out_path: str | Path) -> int:
+        """Export pseudonymised interactions as JSONL for LoRA fine-tuning.
+
+        Learner IDs are replaced with a one-way hash so no real identity leaks.
+        Returns the number of records written.
+        """
+        rows = self._conn.execute(
+            "SELECT learner_id, skill, difficulty, lang, "
+            "prompt_enc, child_response_enc, feedback_enc, correct "
+            "FROM interactions ORDER BY ts"
+        ).fetchall()
+
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        count = 0
+        with out_path.open("w", encoding="utf-8") as f:
+            for learner_id, skill, difficulty, lang, p_enc, r_enc, fb_enc, correct in rows:
+                try:
+                    prompt = _decrypt(p_enc, self._key).decode()
+                    response = _decrypt(r_enc, self._key).decode()
+                    feedback = _decrypt(fb_enc, self._key).decode()
+                except Exception:
+                    continue  # skip records that fail to decrypt
+                pseudo_id = hashlib.sha256(learner_id.encode()).hexdigest()[:12]
+                record = {
+                    "instruction": (
+                        f"You are a friendly math tutor for children aged 5–9. "
+                        f"Skill: {skill}, difficulty: {difficulty}/10, language: {lang}."
+                    ),
+                    "input": f"Question shown: {prompt}\nChild answered: {response}\nCorrect: {bool(correct)}",
+                    "output": feedback,
+                    "meta": {"pseudo_learner": pseudo_id, "skill": skill, "lang": lang},
+                }
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+                count += 1
+        return count
 
     # ------------------------------------------------------------------
     # Weekly report

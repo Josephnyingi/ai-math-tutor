@@ -530,6 +530,91 @@ multiplying the impact across the classroom. Uses the existing
 
 ---
 
+## Fund this — 90-day commitment
+
+> **"Give me $30,000 and by Month 3 I will put a working, evidence-backed
+> numeracy tutor in the hands of 60 Rwandan children — with peer-reviewed
+> learning-gain data, a retrained model on real child speech, and a second
+> school ready to deploy."**
+
+### Why $30,000
+
+This is a lean, infrastructure-light product. The hard engineering is done.
+What the money buys is **time on the ground and compute for retraining**.
+
+| Line item | Cost |
+|---|---|
+| 2 engineers (ML + full-stack) × 3 months | $21,000 |
+| Kinyarwanda linguistic consultant (KIN ASR fine-tuning) | $1,500 |
+| School pilot — 2 sites, tablets, logistics, parent consent | $2,000 |
+| GPU compute — 4 retraining runs + KIN Whisper fine-tune | $500 |
+| Teacher training workshops (2 × half-day) | $1,000 |
+| Contingency 15% | $3,900 |
+| **Total ask** | **$29,900 ≈ $30,000** |
+
+### What ships by Month 3
+
+1. **KIN-fine-tuned speech recognition** — Whisper-small trained on Mozilla
+   Common Voice KIN + our pitch-shifted child audio. Word-error rate target:
+   < 15% (down from ~40% out-of-the-box). Every child heard correctly.
+
+2. **Real-data retrained LoRA** — second training round on 500+ authentic
+   child–tutor exchanges logged by the deployed app. The model will have
+   seen real Rwandan children make real mistakes.
+
+3. **GGUF-quantised model on a $50 tablet** — TinyLlama adapter merged and
+   quantised to Q4_K_M. Verified running on the same tablet specification
+   used in Rwandan community centres.
+
+4. **School pilot learning-gain evidence** — pre/post numeracy assessment
+   across 60 children (2 P1–P3 classes). BKT mastery delta vs. control group.
+   Target: ≥ +0.15 mastery improvement on the weakest skill.
+
+5. **Teacher dashboard v1** — class-level BKT mastery heatmap per skill.
+   A teacher sees which concept 18/30 students are failing before Monday's
+   lesson. Differentially private — no individual child data exposed.
+
+6. **Research brief** ready for AIMS grant application or journal submission
+   (CHI, EMNLP Africa track, or Learning @ Scale).
+
+### 90-day plan
+
+```text
+Month 1 — Deploy & collect (Days 1–30)
+  ├─ Deploy to School A (30 children, P1–P3 class)
+  ├─ Run pre-assessment baseline (numeracy scores per skill)
+  ├─ Collect 500 real interaction triples (encrypted on-device)
+  ├─ GGUF quantise TinyLlama → verify on $50 Android tablet
+  └─ Weekly check-in with class teacher; refine silence thresholds
+
+Month 2 — Retrain & validate (Days 31–60)
+  ├─ Export pseudonymised interactions → retrain LoRA on real data
+  ├─ Fine-tune Whisper-small on KIN Common Voice + child audio
+  ├─ Ship teacher dashboard v1 (class-level skill heatmap)
+  ├─ Mid-point assessment at Week 6 (track trajectory)
+  └─ Onboard School B (30 children) with improved model
+
+Month 3 — Evidence & scale (Days 61–90)
+  ├─ Post-assessment: compare to baseline + control group
+  ├─ Analyse learning gains — target ≥ +0.15 BKT mastery delta
+  ├─ Draft research brief for grant / journal submission
+  ├─ Package v1.0 release with reproducible training pipeline
+  └─ Present results to AIMS KTT cohort + identify School C
+```
+
+### Why this team, why now
+
+The core system already works — 19/19 tests pass, real LoRA trained,
+BKT outperforms Elo baseline, full offline stack in 24 MB.
+The only thing standing between this prototype and 60 children learning
+better is **runway**. Three months of funded time closes that gap and
+produces the evidence base that unlocks the next round of funding.
+
+> Interested in funding or partnering?
+> [joseph@dtsolutions.io](mailto:joseph@dtsolutions.io) · [github.com/Josephnyingi/ai-math-tutor](https://github.com/Josephnyingi/ai-math-tutor)
+
+---
+
 ## Resources & links
 
 | Artefact | Where |
